@@ -45,7 +45,7 @@ jobs:
       - name: Install `ninja` on Alpine
         if: startsWith(matrix.target.id, 'linux-musl')
         run: |
-          apk add ninja bash
+          apk add ninja bash git
       
       - name: Install `ninja` on macOS
         if: startsWith(matrix.target.id, 'darwin-')
