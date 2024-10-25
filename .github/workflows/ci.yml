@@ -64,7 +64,7 @@ jobs:
         if: matrix.target.id == 'windows-amd64'
 
       - name: Build
-        if: matrix.target.id != 'windows-amd64' && matrix.target != 'linux-musl'
+        if: matrix.target.id != 'windows-amd64' && matrix.target.id != 'linux-musl'
         shell: bash
         run: |
           ./build.sh 
