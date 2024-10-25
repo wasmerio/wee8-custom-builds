@@ -45,7 +45,7 @@ jobs:
       - name: Install tools on Alpine
         if: startsWith(matrix.target.id, 'linux-musl')
         run: |
-          apk add ninja bash git cmake
+          apk add ninja bash git cmake clang18-dev llvm18-dev
       
       - name: Install `ninja` on macOS
         if: startsWith(matrix.target.id, 'darwin-')
