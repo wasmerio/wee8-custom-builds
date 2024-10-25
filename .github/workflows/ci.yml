@@ -31,7 +31,7 @@ jobs:
       fail-fast: true
 
     runs-on: ${{ matrix.target.os }}
-    container: ${{ matrix.container }}
+    container: ${{ matrix.target.container }}
     steps:
       - name: Check out the code
         uses: actions/checkout@v3
