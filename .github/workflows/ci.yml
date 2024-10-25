@@ -42,10 +42,10 @@ jobs:
         run: |
           sudo apt-get install ninja-build -y
 
-      - name: Install `ninja` on Alpine
+      - name: Install tools on Alpine
         if: startsWith(matrix.target.id, 'linux-musl')
         run: |
-          apk add ninja bash git
+          apk add ninja bash git cmake
       
       - name: Install `ninja` on macOS
         if: startsWith(matrix.target.id, 'darwin-')
