@@ -142,6 +142,16 @@ jobs:
           asset_name: wee8-linux-amd64.tar.xz
           asset_content_type: application/gzip
 
+      - name: Upload Release Asset Linux musl
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/linux-musl-${{matrix.tag}}/wee8.tar.xz
+          asset_name: wee8-linux-musl.tar.xz
+          asset_content_type: application/gzip
+
       - name: Upload Release Asset Darwin
         uses: actions/upload-release-asset@v1
         env:
