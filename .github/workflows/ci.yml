@@ -64,10 +64,16 @@ jobs:
         if: matrix.target.id == 'windows-amd64'
 
       - name: Build
-        if: matrix.target.id != 'windows-amd64'
+        if: matrix.target.id != 'windows-amd64' && matrix.target != 'linux-musl'
         shell: bash
         run: |
           ./build.sh 
+
+      - name: Build musl
+        if: matrix.target.id == 'linux-musl'
+        shell: bash
+        run: |
+          CXX=clang++-18 ./build.sh
 
       - name: Build (Windows)
         if: matrix.target.id == 'windows-amd64'
