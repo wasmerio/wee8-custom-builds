@@ -11,6 +11,9 @@ jobs:
         target:
           - id: 'linux-amd64'
             os: 'ubuntu-20.04'
+          - id: 'linux-musl'
+            os: 'ubuntu-20.04'
+            container: alpine:latest
           - id: 'darwin-amd64'
             os: 'macos-13'
           - id: 'darwin-aarch64'
@@ -24,20 +27,25 @@ jobs:
             # adds an additional copy per link, but it reliably works and
             # the additional size is not too large on Windows.
             tar_extra_args: '--dereference'
-        tag: ['11.6']
+        tag: ['11.7']
       fail-fast: true
 
     runs-on: ${{ matrix.target.os }}
-
+    container: ${{ matrix.target.container }}
     steps:
       - name: Check out the code
         uses: actions/checkout@v3
 
       - name: Install `ninja` on Ubuntu
-        if: startsWith(matrix.target.id, 'linux-')
+        if: startsWith(matrix.target.id, 'linux-amd64')
         shell: bash
         run: |
           sudo apt-get install ninja-build -y
+
+      - name: Install tools on Alpine
+        if: startsWith(matrix.target.id, 'linux-musl')
+        run: |
+          apk add ninja bash git cmake clang18-dev llvm18-dev xz
       
       - name: Install `ninja` on macOS
         if: startsWith(matrix.target.id, 'darwin-')
@@ -56,10 +64,16 @@ jobs:
         if: matrix.target.id == 'windows-amd64'
 
       - name: Build
-        if: matrix.target.id != 'windows-amd64'
+        if: matrix.target.id != 'windows-amd64' && matrix.target.id != 'linux-musl'
         shell: bash
         run: |
           ./build.sh 
+
+      - name: Build musl
+        if: matrix.target.id == 'linux-musl'
+        shell: bash
+        run: |
+          CXX=clang++-18 ./build.sh
 
       - name: Build (Windows)
         if: matrix.target.id == 'windows-amd64'
@@ -98,7 +112,7 @@ jobs:
     needs: [build]
     strategy:
       matrix:
-        tag: ['11.6']
+        tag: ['11.7']
 
 
     steps:
@@ -132,6 +146,16 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: artifacts/linux-amd64-${{matrix.tag}}/wee8.tar.xz
           asset_name: wee8-linux-amd64.tar.xz
+          asset_content_type: application/gzip
+
+      - name: Upload Release Asset Linux musl
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/linux-musl-${{matrix.tag}}/wee8.tar.xz
+          asset_name: wee8-linux-musl.tar.xz
           asset_content_type: application/gzip
 
       - name: Upload Release Asset Darwin
