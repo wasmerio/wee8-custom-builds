@@ -112,7 +112,7 @@ jobs:
     needs: [build]
     strategy:
       matrix:
-        tag: ['11.6']
+        tag: ['11.7']
 
 
     steps:
