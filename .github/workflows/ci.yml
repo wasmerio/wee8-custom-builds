@@ -85,7 +85,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          tar --directory v8-cmake/build --create --xz --verbose ${{ matrix.target.tar_extra_args }} --file dist/wee8.tar.xz libv8_base_without_compiler.a libv8_compiler.a libv8_initializers.a libv8_libbase.a libv8_libplatform.a libv8_libsampler.a libv8_snapshot.a libv8_torque_generated.a libwee8.a
+          tar --directory v8/out/release --create --xz --verbose ${{ matrix.target.tar_extra_args }} --file dist/wee8.tar.xz libwee8.a
           ls -lh dist/wee8.tar.xz
 
       - name: Zip (Windows)
@@ -93,7 +93,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          tar --directory v8-cmake/build --create --xz --verbose ${{ matrix.target.tar_extra_args }} --file dist/wee8.tar.xz v8_base_without_compiler.lib v8_compiler.lib v8_initializers.lib v8_libbase.lib v8_libplatform.lib v8_libsampler.lib v8_snapshot.lib v8_torque_generated.lib wee8.lib
+          tar --directory v8/out/release --create --xz --verbose ${{ matrix.target.tar_extra_args }} --file dist/wee8.tar.xz wee8.lib
           ls -lh dist/wee8.tar.xz
 
 

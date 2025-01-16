@@ -3,54 +3,40 @@
 # Display all commands before executing them.
 set -o errexit
 set -o errtrace
+set -x
 
-V8_REPO_URL=${2:-https://github.com/laper32/v8-cmake.git}
-LLVM_CROSS="$3"
+DEPOT_TOOLS_REPO="https://chromium.googlesource.com/chromium/tools/depot_tools.git"
+ARCH=${3:-$(uname -m)}
 
-if [[ -z "$V8_REPO_URL" ]]
-then
-  echo "Usage: $0 <v8-repository-url>"
-  echo
-  echo "# Arguments"
-  echo "  v8-repository-url  The URL used to clone v8-cmake sources (default: $V8_REPO_URL)"
-
-  exit 1
+if [ ! -d depot_tools ]
+then 
+  git clone --single-branch --depth=1 "$DEPOT_TOOLS_REPO" depot_tools
 fi
 
-if [ ! -d v8-cmake ]
-then
-	git clone -b "msvc" --single-branch --depth=1 "$V8_REPO_URL" v8-cmake
-fi
+export PATH="$(pwd)/depot_tools:$PATH"
 
-cd v8-cmake 
+# Set up google's client and fetch v8
+gclient && fetch v8 --nohistory
 
-# Create a directory to build the project.
-mkdir -p build
-cd build
+cd v8
 
-# Create a directory to receive the complete installation.
-mkdir -p install
-
-# Adjust compilation based on the OS.
-CMAKE_ARGUMENTS=""
-
-case "${OSTYPE}" in
-    darwin*) ;;
-    linux*) ;;
-    *) ;;
-esac
-
-## Adjust cross compilation
-#CROSS_COMPILE=""
-#
-#case "${LLVM_CROSS}" in
-#    aarch64*) CROSS_COMPILE="-DLLVM_HOST_TRIPLE=aarch64-linux-gnu" ;;
-#    riscv64*) CROSS_COMPILE="-DLLVM_HOST_TRIPLE=riscv64-linux-gnu" ;;
-#    *) ;;
-#esac
-
-# Run `cmake` to configure the project.
-cmake -G "Ninja" -DCMAKE_BUILD_TYPE=MinSizeRel ..
+gn gen out/release --args="is_component_build=false  \
+  v8_monolithic=true v8_static_library=true  \ 
+  is_clang=false  \
+  is_asan=false \
+  is_debug=false \
+  is_official_build=false \
+  v8_enable_sandbox=false \
+  treat_warnings_as_errors=false \
+  clang_use_chrome_plugins=false \
+  v8_enable_i18n_support=false \
+  v8_use_external_startup_data=false \
+  use_custom_libcxx=false \
+  use_sysroot=false \
+  v8_enable_slow_dchecks=false \
+  v8_dcheck_always_on=false \
+  v8_enable_fast_mksnapshot=true \
+  target_cpu=\"$ARCH\""
 
 # Showtime!
-cmake --build . --config MinSizeRel --target wee8
+ninja -C out/release
