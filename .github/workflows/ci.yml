@@ -40,7 +40,7 @@ jobs:
         if: startsWith(matrix.target.id, 'linux-amd64')
         shell: bash
         run: |
-          sudo apt-get install ninja-build -y
+          sudo apt-get install ninja-build clang gcc14 -y
 
       - name: Install tools on Alpine
         if: startsWith(matrix.target.id, 'linux-musl')
