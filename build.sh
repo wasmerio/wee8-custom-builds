@@ -21,7 +21,7 @@ gclient && fetch --no-history v8
 cd v8
 
 gn gen out/release --args="is_component_build=false  \
-  v8_monolithic=true v8_static_library=true  \ 
+  v8_monolithic=true v8_static_library=true \
   is_clang=false  \
   is_asan=false \
   is_debug=false \
