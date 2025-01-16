@@ -14,10 +14,10 @@ jobs:
             # - id: 'linux-musl'
             #   os: 'ubuntu-latest'
             #   container: alpine:latest
-          - id: 'darwin-amd64'
-            os: 'macos-13'
-            # - id: 'darwin-aarch64'
-            #   os: 'macos-latest'
+            #- id: 'darwin-amd64'
+            #  os: 'macos-13'
+          - id: 'darwin-aarch64'
+            os: 'macos-latest'
             # - id: 'windows-amd64'
             #   os: 'windows-latest'
             # When unpacking an archive on Windows, the symlinks can't be
