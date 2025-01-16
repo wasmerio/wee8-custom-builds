@@ -36,11 +36,11 @@ jobs:
       - name: Check out the code
         uses: actions/checkout@v3
 
-      - name: Install `ninja` on Ubuntu
+      - name: Install dependencies on Ubuntu
         if: startsWith(matrix.target.id, 'linux-amd64')
         shell: bash
         run: |
-          sudo apt-get install ninja-build clang -y
+          sudo apt-get install ninja-build clang libglib2.0-dev   -y
 
       - name: Install tools on Alpine
         if: startsWith(matrix.target.id, 'linux-musl')
