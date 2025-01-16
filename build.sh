@@ -16,7 +16,7 @@ fi
 export PATH="$(pwd)/depot_tools:$PATH"
 
 # Set up google's client and fetch v8
-gclient && fetch v8 --no-history
+gclient && fetch --no-history v8
 
 cd v8
 
