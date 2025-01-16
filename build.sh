@@ -6,7 +6,17 @@ set -o errtrace
 set -x
 
 DEPOT_TOOLS_REPO="https://chromium.googlesource.com/chromium/tools/depot_tools.git"
-ARCH=${3:-$(uname -m)}
+case $(uname -m) in
+
+  "x86_64")
+	ARCH="x64"
+    ;;
+
+  *)
+	ARCH=$(uname -m)
+    ;;
+esac
+
 
 if [ ! -d depot_tools ]
 then 
@@ -16,7 +26,11 @@ fi
 export PATH="$(pwd)/depot_tools:$PATH"
 
 # Set up google's client and fetch v8
-gclient && fetch --no-history v8
+if [ ! -d v8 ]
+then 
+  gclient 
+  fetch --no-history v8
+fi
 
 cd v8
 
