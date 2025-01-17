@@ -35,7 +35,7 @@ fi
 cd v8
 
 gn gen out/release --args="is_component_build=false  \
-  v8_monolithic=true v8_static_library=true \
+  v8_static_library=true \
   is_clang=false  \
   is_asan=false \
   is_debug=false \
@@ -53,4 +53,4 @@ gn gen out/release --args="is_component_build=false  \
   target_cpu=\"$ARCH\""
 
 # Showtime!
-ninja -C out/release
+ninja -C out/release wee8
