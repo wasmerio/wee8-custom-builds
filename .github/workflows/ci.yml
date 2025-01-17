@@ -18,6 +18,7 @@ jobs:
           #  os: 'macos-13'
           - id: 'darwin-aarch64'
             os: 'macos-latest'
+            XcodeVersion: 'Xcode_16.0.app'
             #- id: 'windows-amd64'
             #  os: 'windows-latest'
             # When unpacking an archive on Windows, the symlinks can't be
