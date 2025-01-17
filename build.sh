@@ -54,3 +54,5 @@ gn gen out/release --args="is_component_build=false  \
 
 # Showtime!
 ninja -C out/release wee8
+
+ls -laR out
