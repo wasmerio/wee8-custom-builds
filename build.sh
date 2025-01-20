@@ -35,7 +35,7 @@ fi
 cd v8
 
 for patch in ../patches/*.patch; do 
-  git am $patch
+  git apply $patch
 done 
 
 gn gen out/x64.debug --args="is_debug=false \
