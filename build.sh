@@ -59,4 +59,4 @@ gn gen out/release --args="is_debug=false \
 # Showtime!
 ninja -C out/release wee8
 
-ls -laR out
+ls -laR out/release/obj
