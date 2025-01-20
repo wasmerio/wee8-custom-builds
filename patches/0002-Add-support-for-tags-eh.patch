@@ -1,0 +1,527 @@
+From 1c0a90c83076b0bcd783391bd16521d78e6fc09c Mon Sep 17 00:00:00 2001
+From: Edoardo Marangoni <ecmm@anche.no>
+Date: Mon, 20 Jan 2025 15:20:40 +0100
+Subject: [PATCH 2/2] Add support for tags (eh)
+
+---
+ src/wasm/c-api.cc            | 171 +++++++++++++++++++++++++++++++++--
+ third_party/wasm-api/wasm.h  |  30 ++++++
+ third_party/wasm-api/wasm.hh |  45 ++++++++-
+ 3 files changed, 239 insertions(+), 7 deletions(-)
+
+diff --git a/src/wasm/c-api.cc b/src/wasm/c-api.cc
+index 4ad54f3f6cb..bef91d8e38c 100644
+--- a/src/wasm/c-api.cc
++++ b/src/wasm/c-api.cc
+@@ -44,6 +44,7 @@
+ #include "src/wasm/wasm-result.h"
+ #include "src/wasm/wasm-serialization.h"
+ #include "third_party/wasm-api/wasm.h"
++#include "third_party/wasm-api/wasm.hh"
+ 
+ #ifdef V8_OS_WIN
+ 
+@@ -221,7 +222,16 @@ own<ExternType> GetImportExportType(const i::wasm::WasmModule* module,
+       return GlobalType::make(std::move(content), mutability);
+     }
+     case i::wasm::kExternalTag:
+-      UNREACHABLE();
++      const i::wasm::WasmTag& tag = module->tags[index];
++      const i::wasm::WasmTagSig* sig = tag.sig;
++      auto param_count = sig->parameter_count();
++      ownvec<ValType> params = ownvec<ValType>::make_uninitialized(param_count);
++
++      for (size_t i = 0; i < param_count; i++) {
++        params[i] = ValType::make(V8ValueTypeToWasm(sig->GetParam(i)));
++      }
++
++      return TagType::make(std::move(params));
+   }
+ }
+ 
+@@ -662,6 +672,8 @@ WASM_EXPORT auto ExternType::copy() const -> own<ExternType> {
+       return table()->copy();
+     case ExternKind::MEMORY:
+       return memory()->copy();
++    case ExternKind::TAG:
++      return tag()->copy();
+   }
+ }
+ 
+@@ -772,6 +784,48 @@ auto ExternType::global() const -> const GlobalType* {
+              : nullptr;
+ }
+ 
++// Tag Types
++
++struct TagTypeImpl : ExternTypeImpl {
++  ownvec<ValType> params;
++
++  TagTypeImpl(ownvec<ValType>& params)
++      : ExternTypeImpl(ExternKind::TAG), params(std::move(params)) {}
++};
++
++template <>
++struct implement<TagType> {
++  using type = TagTypeImpl;
++};
++
++void TagType::destroy() { delete impl(this); }
++
++auto TagType::make(ownvec<ValType>&& params) -> own<TagType> {
++  return params ? own<TagType>(
++                      seal<TagType>(new (std::nothrow) TagTypeImpl(params)))
++                : own<TagType>();
++}
++
++auto TagType::copy() const -> own<TagType> {
++  return make(params().deep_copy());
++}
++
++auto TagType::params() const -> const ownvec<ValType>& {
++  return impl(this)->params;
++}
++
++auto ExternType::tag() -> TagType* {
++  return kind() == ExternKind::TAG
++             ? seal<TagType>(static_cast<TagTypeImpl*>(impl(this)))
++             : nullptr;
++}
++
++auto ExternType::tag() const -> const TagType* {
++  return kind() == ExternKind::TAG
++             ? seal<TagType>(static_cast<const TagTypeImpl*>(impl(this)))
++             : nullptr;
++}
++
+ // Table Types
+ 
+ struct TableTypeImpl : ExternTypeImpl {
+@@ -983,9 +1037,7 @@ class RefImpl {
+ 
+   i::Isolate* isolate() const { return store()->i_isolate(); }
+ 
+-  i::Handle<JSType> v8_object() const {
+-    return i::Cast<JSType>(val_);
+-  }
++  i::Handle<JSType> v8_object() const { return i::Cast<JSType>(val_); }
+ 
+   void* get_host_info() const {
+     v8::Isolate::Scope isolate_scope(store()->isolate());
+@@ -1416,6 +1468,8 @@ WASM_EXPORT auto Extern::kind() const -> ExternKind {
+   if (IsWasmGlobalObject(*obj)) return wasm::ExternKind::GLOBAL;
+   if (IsWasmTableObject(*obj)) return wasm::ExternKind::TABLE;
+   if (IsWasmMemoryObject(*obj)) return wasm::ExternKind::MEMORY;
++  if (IsWasmTagObject(*obj)) return wasm::ExternKind::TAG;
++
+   UNREACHABLE();
+ }
+ 
+@@ -1425,6 +1479,8 @@ WASM_EXPORT auto Extern::type() const -> own<ExternType> {
+       return func()->type();
+     case ExternKind::GLOBAL:
+       return global()->type();
++    case ExternKind::TAG:
++      return tag()->type();
+     case ExternKind::TABLE:
+       return table()->type();
+     case ExternKind::MEMORY:
+@@ -1440,6 +1496,10 @@ WASM_EXPORT auto Extern::global() -> Global* {
+   return kind() == ExternKind::GLOBAL ? static_cast<Global*>(this) : nullptr;
+ }
+ 
++WASM_EXPORT auto Extern::tag() -> Tag* {
++  return kind() == ExternKind::TAG ? static_cast<Tag*>(this) : nullptr;
++}
++
+ WASM_EXPORT auto Extern::table() -> Table* {
+   return kind() == ExternKind::TABLE ? static_cast<Table*>(this) : nullptr;
+ }
+@@ -1457,6 +1517,10 @@ WASM_EXPORT auto Extern::global() const -> const Global* {
+                                       : nullptr;
+ }
+ 
++WASM_EXPORT auto Extern::tag() const -> const Tag* {
++  return kind() == ExternKind::TAG ? static_cast<const Tag*>(this) : nullptr;
++}
++
+ WASM_EXPORT auto Extern::table() const -> const Table* {
+   return kind() == ExternKind::TABLE ? static_cast<const Table*>(this)
+                                      : nullptr;
+@@ -2103,6 +2167,62 @@ WASM_EXPORT void Global::set(const Val& val) {
+   }
+ }
+ 
++// Tag Instances
++
++template <>
++struct implement<Tag> {
++  using type = RefImpl<Tag, i::WasmTagObject>;
++};
++
++WASM_EXPORT void Tag::destroy() { delete (this); }
++
++WASM_EXPORT auto Tag::copy() const -> own<Tag> { return impl(this)->copy(); }
++
++WASM_EXPORT auto Tag::make(Store* store_abs, const TagType* type) -> own<Tag> {
++  StoreImpl* store = impl(store_abs);
++  v8::Isolate::Scope isolate_scope(store->isolate());
++  i::Isolate* isolate = store->i_isolate();
++  i::HandleScope handle_scope(isolate);
++  CheckAndHandleInterrupts(isolate);
++
++  const ownvec<ValType>& wasm_params = type->params();
++  auto param_count = wasm_params.size();
++  std::vector<i::wasm::ValueType> param_types(param_count, i::wasm::kWasmVoid);
++
++  for (size_t i = 0; i < param_count; i++) {
++    param_types[i] =
++        i::wasm::ValueType(WasmValKindToV8(wasm_params[i]->kind()));
++  }
++
++  i::wasm::FunctionSig sig(0, param_count, param_types.data());
++
++  i::wasm::WasmEngine* engine = i::wasm::GetWasmEngine();
++  auto canonical_type_index =
++      engine->type_canonicalizer()->AddRecursiveGroup(&sig);
++
++  auto rt_tag = i::WasmExceptionTag::New(isolate, 0);
++  i::Handle<i::WasmTagObject> tag_obj =
++      i::WasmTagObject::New(isolate, &sig, canonical_type_index, rt_tag,
++                            i::Handle<i::WasmTrustedInstanceData>());
++
++  auto tag = implement<Tag>::type::make(store, tag_obj);
++  assert(tag);
++  return tag;
++}
++
++WASM_EXPORT auto Tag::type() const -> own<TagType> {
++  i::DirectHandle<i::WasmTagObject> v8_tag = impl(this)->v8_object();
++  auto v8_params = v8_tag->serialized_signature();
++  auto param_count = v8_params->length();
++  ownvec<ValType> params = ownvec<ValType>::make_uninitialized(param_count);
++
++  for (int i = 0; i < param_count; i++) {
++    params[i] = ValType::make(V8ValueTypeToWasm(v8_params->get(i)));
++  }
++
++  return TagType::make(std::move(params));
++}
++
+ // Table Instances
+ 
+ template <>
+@@ -2305,7 +2425,7 @@ WASM_EXPORT auto Memory::type() const -> own<MemoryType> {
+                                        i::wasm::kWasmPageSize);
+   uint32_t max =
+       memory->has_maximum_pages() ? memory->maximum_pages() : 0xFFFFFFFFu;
+-  return MemoryType::make(Limits(min, max));
++  return MemoryType::make(Limits(min, max, false));
+ }
+ 
+ WASM_EXPORT auto Memory::data() const -> byte_t* {
+@@ -2471,6 +2591,10 @@ WASM_EXPORT auto Instance::exports() const -> ownvec<Extern> {
+         exports[i] = implement<Memory>::type::make(
+             store, i::Cast<i::WasmMemoryObject>(obj));
+       } break;
++      case ExternKind::TAG: {
++        exports[i] =
++            implement<Tag>::type::make(store, i::Cast<i::WasmTagObject>(obj));
++      } break;
+     }
+   }
+ 
+@@ -2724,7 +2848,7 @@ extern "C++" inline auto hide_limits(const wasm::Limits& limits)
+ }
+ 
+ extern "C++" inline auto reveal_limits(wasm_limits_t limits) -> wasm::Limits {
+-  return wasm::Limits(limits.min, limits.max);
++  return wasm::Limits(limits.min, limits.max, limits.shared);
+ }
+ 
+ extern "C++" inline auto hide_valkind(wasm::ValKind kind) -> wasm_valkind_t {
+@@ -2804,6 +2928,17 @@ wasm_mutability_t wasm_globaltype_mutability(const wasm_globaltype_t* gt) {
+   return hide_mutability(gt->mutability());
+ }
+ 
++// Tag Types
++
++WASM_DEFINE_TYPE(tagtype, wasm::TagType)
++
++wasm_tagtype_t* wasm_tagtype_new(wasm_valtype_vec_t* params) {
++  return release_tagtype(wasm::TagType::make(adopt_valtype_vec(params)));
++}
++const wasm_valtype_vec_t* wasm_tagtype_params(const wasm_tagtype_t* ft) {
++  return hide_valtype_vec(ft->params());
++}
++
+ // Table Types
+ 
+ WASM_DEFINE_TYPE(tabletype, wasm::TableType)
+@@ -3355,6 +3490,18 @@ void wasm_global_set(wasm_global_t* global, const wasm_val_t* val) {
+   global->set(val_.it);
+ }
+ 
++// Tag Instances
++
++WASM_DEFINE_REF(tag, wasm::Tag)
++
++wasm_tag_t* wasm_tag_new(wasm_store_t* store, const wasm_tagtype_t* type) {
++  return release_tag(wasm::Tag::make(store, type));
++}
++
++wasm_tagtype_t* wasm_tag_type(const wasm_tag_t* tag) {
++  return release_tagtype(tag->type());
++}
++
+ // Table Instances
+ 
+ WASM_DEFINE_REF(table, wasm::Table)
+@@ -3431,6 +3578,9 @@ wasm_extern_t* wasm_func_as_extern(wasm_func_t* func) {
+ wasm_extern_t* wasm_global_as_extern(wasm_global_t* global) {
+   return hide_extern(static_cast<wasm::Extern*>(reveal_global(global)));
+ }
++wasm_extern_t* wasm_tag_as_extern(wasm_tag_t* tag) {
++  return hide_extern(static_cast<wasm::Extern*>(reveal_tag(tag)));
++}
+ wasm_extern_t* wasm_table_as_extern(wasm_table_t* table) {
+   return hide_extern(static_cast<wasm::Extern*>(reveal_table(table)));
+ }
+@@ -3444,6 +3594,9 @@ const wasm_extern_t* wasm_func_as_extern_const(const wasm_func_t* func) {
+ const wasm_extern_t* wasm_global_as_extern_const(const wasm_global_t* global) {
+   return hide_extern(static_cast<const wasm::Extern*>(reveal_global(global)));
+ }
++const wasm_extern_t* wasm_tag_as_extern_const(const wasm_tag_t* tag) {
++  return hide_extern(static_cast<const wasm::Extern*>(reveal_tag(tag)));
++}
+ const wasm_extern_t* wasm_table_as_extern_const(const wasm_table_t* table) {
+   return hide_extern(static_cast<const wasm::Extern*>(reveal_table(table)));
+ }
+@@ -3457,6 +3610,9 @@ wasm_func_t* wasm_extern_as_func(wasm_extern_t* external) {
+ wasm_global_t* wasm_extern_as_global(wasm_extern_t* external) {
+   return hide_global(external->global());
+ }
++wasm_tag_t* wasm_extern_as_tag(wasm_extern_t* external) {
++  return hide_tag(external->tag());
++}
+ wasm_table_t* wasm_extern_as_table(wasm_extern_t* external) {
+   return hide_table(external->table());
+ }
+@@ -3471,6 +3627,9 @@ const wasm_global_t* wasm_extern_as_global_const(
+     const wasm_extern_t* external) {
+   return hide_global(external->global());
+ }
++const wasm_tag_t* wasm_extern_as_tag_const(const wasm_extern_t* external) {
++  return hide_tag(external->tag());
++}
+ const wasm_table_t* wasm_extern_as_table_const(const wasm_extern_t* external) {
+   return hide_table(external->table());
+ }
+diff --git a/third_party/wasm-api/wasm.h b/third_party/wasm-api/wasm.h
+index 50a05297712..4f37e8ff891 100644
+--- a/third_party/wasm-api/wasm.h
++++ b/third_party/wasm-api/wasm.h
+@@ -228,6 +228,15 @@ WASM_API_EXTERN const wasm_valtype_t* wasm_globaltype_content(const wasm_globalt
+ WASM_API_EXTERN wasm_mutability_t wasm_globaltype_mutability(const wasm_globaltype_t*);
+ 
+ 
++// Tag Types
++
++WASM_DECLARE_TYPE(tagtype)
++
++WASM_API_EXTERN own wasm_tagtype_t* wasm_tagtype_new(own wasm_valtype_vec_t* params);
++
++WASM_API_EXTERN const wasm_valtype_vec_t* wasm_tagtype_params(const wasm_tagtype_t*);
++
++
+ // Table Types
+ 
+ WASM_DECLARE_TYPE(tabletype)
+@@ -258,27 +267,32 @@ enum wasm_externkind_enum {
+   WASM_EXTERN_GLOBAL,
+   WASM_EXTERN_TABLE,
+   WASM_EXTERN_MEMORY,
++  WASM_EXTERN_TAG,
+ };
+ 
+ WASM_API_EXTERN wasm_externkind_t wasm_externtype_kind(const wasm_externtype_t*);
+ 
+ WASM_API_EXTERN wasm_externtype_t* wasm_functype_as_externtype(wasm_functype_t*);
+ WASM_API_EXTERN wasm_externtype_t* wasm_globaltype_as_externtype(wasm_globaltype_t*);
++WASM_API_EXTERN wasm_externtype_t* wasm_tagtype_as_externtype(wasm_tagtype_t*);
+ WASM_API_EXTERN wasm_externtype_t* wasm_tabletype_as_externtype(wasm_tabletype_t*);
+ WASM_API_EXTERN wasm_externtype_t* wasm_memorytype_as_externtype(wasm_memorytype_t*);
+ 
+ WASM_API_EXTERN wasm_functype_t* wasm_externtype_as_functype(wasm_externtype_t*);
+ WASM_API_EXTERN wasm_globaltype_t* wasm_externtype_as_globaltype(wasm_externtype_t*);
++WASM_API_EXTERN wasm_tagtype_t* wasm_externtype_as_tagtype(wasm_externtype_t*);
+ WASM_API_EXTERN wasm_tabletype_t* wasm_externtype_as_tabletype(wasm_externtype_t*);
+ WASM_API_EXTERN wasm_memorytype_t* wasm_externtype_as_memorytype(wasm_externtype_t*);
+ 
+ WASM_API_EXTERN const wasm_externtype_t* wasm_functype_as_externtype_const(const wasm_functype_t*);
+ WASM_API_EXTERN const wasm_externtype_t* wasm_globaltype_as_externtype_const(const wasm_globaltype_t*);
++WASM_API_EXTERN const wasm_externtype_t* wasm_tagtype_as_externtype_const(const wasm_tagtype_t*);
+ WASM_API_EXTERN const wasm_externtype_t* wasm_tabletype_as_externtype_const(const wasm_tabletype_t*);
+ WASM_API_EXTERN const wasm_externtype_t* wasm_memorytype_as_externtype_const(const wasm_memorytype_t*);
+ 
+ WASM_API_EXTERN const wasm_functype_t* wasm_externtype_as_functype_const(const wasm_externtype_t*);
+ WASM_API_EXTERN const wasm_globaltype_t* wasm_externtype_as_globaltype_const(const wasm_externtype_t*);
++WASM_API_EXTERN const wasm_tagtype_t* wasm_externtype_as_tagtype_const(const wasm_externtype_t*);
+ WASM_API_EXTERN const wasm_tabletype_t* wasm_externtype_as_tabletype_const(const wasm_externtype_t*);
+ WASM_API_EXTERN const wasm_memorytype_t* wasm_externtype_as_memorytype_const(const wasm_externtype_t*);
+ 
+@@ -446,6 +460,18 @@ WASM_API_EXTERN void wasm_global_get(const wasm_global_t*, own wasm_val_t* out);
+ WASM_API_EXTERN void wasm_global_set(wasm_global_t*, const wasm_val_t*);
+ 
+ 
++// Tag Instances
++
++WASM_DECLARE_REF(tag)
++
++WASM_API_EXTERN own wasm_tag_t* wasm_tag_new(wasm_store_t*, const wasm_tagtype_t*);
++
++WASM_API_EXTERN own wasm_tagtype_t* wasm_tag_type(const wasm_tag_t*);
++
++WASM_API_EXTERN void wasm_tag_get(const wasm_tag_t*, own wasm_val_t* out);
++WASM_API_EXTERN void wasm_tag_set(wasm_tag_t*, const wasm_val_t*);
++
++
+ // Table Instances
+ 
+ WASM_DECLARE_REF(table)
+@@ -493,21 +519,25 @@ WASM_API_EXTERN own wasm_externtype_t* wasm_extern_type(const wasm_extern_t*);
+ 
+ WASM_API_EXTERN wasm_extern_t* wasm_func_as_extern(wasm_func_t*);
+ WASM_API_EXTERN wasm_extern_t* wasm_global_as_extern(wasm_global_t*);
++WASM_API_EXTERN wasm_extern_t* wasm_tag_as_extern(wasm_tag_t*);
+ WASM_API_EXTERN wasm_extern_t* wasm_table_as_extern(wasm_table_t*);
+ WASM_API_EXTERN wasm_extern_t* wasm_memory_as_extern(wasm_memory_t*);
+ 
+ WASM_API_EXTERN wasm_func_t* wasm_extern_as_func(wasm_extern_t*);
+ WASM_API_EXTERN wasm_global_t* wasm_extern_as_global(wasm_extern_t*);
++WASM_API_EXTERN wasm_tag_t* wasm_extern_as_tag(wasm_extern_t*);
+ WASM_API_EXTERN wasm_table_t* wasm_extern_as_table(wasm_extern_t*);
+ WASM_API_EXTERN wasm_memory_t* wasm_extern_as_memory(wasm_extern_t*);
+ 
+ WASM_API_EXTERN const wasm_extern_t* wasm_func_as_extern_const(const wasm_func_t*);
+ WASM_API_EXTERN const wasm_extern_t* wasm_global_as_extern_const(const wasm_global_t*);
++WASM_API_EXTERN const wasm_extern_t* wasm_tag_as_extern_const(const wasm_tag_t*);
+ WASM_API_EXTERN const wasm_extern_t* wasm_table_as_extern_const(const wasm_table_t*);
+ WASM_API_EXTERN const wasm_extern_t* wasm_memory_as_extern_const(const wasm_memory_t*);
+ 
+ WASM_API_EXTERN const wasm_func_t* wasm_extern_as_func_const(const wasm_extern_t*);
+ WASM_API_EXTERN const wasm_global_t* wasm_extern_as_global_const(const wasm_extern_t*);
++WASM_API_EXTERN const wasm_tag_t* wasm_extern_as_tag_const(const wasm_extern_t*);
+ WASM_API_EXTERN const wasm_table_t* wasm_extern_as_table_const(const wasm_extern_t*);
+ WASM_API_EXTERN const wasm_memory_t* wasm_extern_as_memory_const(const wasm_extern_t*);
+ 
+diff --git a/third_party/wasm-api/wasm.hh b/third_party/wasm-api/wasm.hh
+index b079cf3934a..42671d01a6f 100644
+--- a/third_party/wasm-api/wasm.hh
++++ b/third_party/wasm-api/wasm.hh
+@@ -294,13 +294,14 @@ public:
+ // External Types
+ 
+ enum class ExternKind : uint8_t {
+-  FUNC, GLOBAL, TABLE, MEMORY
++  FUNC, GLOBAL, TABLE, MEMORY, TAG
+ };
+ 
+ class FuncType;
+ class GlobalType;
+ class TableType;
+ class MemoryType;
++class TagType;
+ 
+ class WASM_API_EXTERN ExternType {
+   friend class destroyer;
+@@ -317,11 +318,13 @@ public:
+ 
+   auto func() -> FuncType*;
+   auto global() -> GlobalType*;
++  auto tag() -> TagType*;
+   auto table() -> TableType*;
+   auto memory() -> MemoryType*;
+ 
+   auto func() const -> const FuncType*;
+   auto global() const -> const GlobalType*;
++  auto tag() const -> const TagType*;
+   auto table() const -> const TableType*;
+   auto memory() const -> const MemoryType*;
+ };
+@@ -369,6 +372,25 @@ public:
+ };
+ 
+ 
++// Tag Types
++
++class WASM_API_EXTERN TagType : public ExternType {
++  friend class destroyer;
++  void destroy();
++
++protected:
++  TagType() = delete;
++  ~TagType() = default;
++
++public:
++  static auto make(ownvec<ValType>&& params = ownvec<ValType>::make())
++      -> own<TagType>;
++  auto copy() const -> own<TagType>;
++
++  auto params() const -> const ownvec<ValType>&;
++};
++
++
+ // Table Types
+ 
+ class WASM_API_EXTERN TableType : public ExternType {
+@@ -692,6 +714,7 @@ class Func;
+ class Global;
+ class Table;
+ class Memory;
++class Tag;
+ 
+ class WASM_API_EXTERN Extern : public Ref {
+   friend class destroyer;
+@@ -709,11 +732,13 @@ public:
+ 
+   auto func() -> Func*;
+   auto global() -> Global*;
++  auto tag() -> Tag*;
+   auto table() -> Table*;
+   auto memory() -> Memory*;
+ 
+   auto func() const -> const Func*;
+   auto global() const -> const Global*;
++  auto tag() const -> const Tag*;
+   auto table() const -> const Table*;
+   auto memory() const -> const Memory*;
+ };
+@@ -766,6 +791,24 @@ protected:
+ };
+ 
+ 
++// Tag Instances
++
++class WASM_API_EXTERN Tag : public Extern {
++  friend class destroyer;
++  void destroy();
++
++protected:
++  Tag() = default;
++  ~Tag() = default;
++
++public:
++  static auto make(Store*, const TagType*) -> own<Tag>;
++  auto copy() const -> own<Tag>;
++
++  auto type() const -> own<TagType>;
++};
++
++
+ // Table Instances
+ 
+ class WASM_API_EXTERN Table : public Extern {
+-- 
+2.48.1
+
