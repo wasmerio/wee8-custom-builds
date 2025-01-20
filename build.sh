@@ -38,7 +38,7 @@ for patch in ../patches/*.patch; do
   git apply $patch
 done 
 
-gn gen out/x64.debug --args="is_debug=false \
+gn gen out/release --args="is_debug=false \
   v8_symbol_level=2 \
   is_component_build=false \
   is_official_build=false \
