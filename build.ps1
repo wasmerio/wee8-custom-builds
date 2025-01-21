@@ -1,4 +1,5 @@
 $DEPOT_TOOLS_REPO="https://chromium.googlesource.com/chromium/tools/depot_tools.git"
+$DEPOT_TOOLS_WIN_TOOLCHAIN=0
 
 # Clone depot-tools
 if (-not (Test-Path -Path "depot_tools" -PathType Container)) {
