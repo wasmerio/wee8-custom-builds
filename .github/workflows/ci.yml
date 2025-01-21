@@ -28,9 +28,9 @@ jobs:
           - id: 'ios'
             os: 'macos-14'
             native: false             # Not used in the `Build` job, but here for reference
-          - id: 'android'
-            os: 'ubuntu-24.04'
-            native: false             # Not used in the `Build` job, but here for reference
+            #- id: 'android'
+            #  os: 'ubuntu-24.04'
+            #  native: false             # Not used in the `Build` job, but here for reference
           #- id: 'windows-amd64'
           #  os: 'windows-2022'
           #  native: true
