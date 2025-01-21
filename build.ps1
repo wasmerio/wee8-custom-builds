@@ -2,8 +2,11 @@ $DEPOT_TOOLS_REPO="https://chromium.googlesource.com/chromium/tools/depot_tools.
 
 # Clone depot-tools
 if (-not (Test-Path -Path "depot_tools" -PathType Container)) {
-  git clone --single-branch --depth=1 "$DEPOT_TOOLS_REPO" depot_tools
+  git clone --single-branch --depth=1 "$DEPOT_TOOLS_REPO" "C:\tmp\depot_tools"
 }
+
+echo "C:\tmp\depot_tools" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+echo "C:\tmp\depot_tools" | Out-File -FilePath $env:PATH -Encoding utf8 -Append
 
 # Set up google's client and fetch v8
 if (-not (Test-Path -Path "v8" -PathType Container)) {
