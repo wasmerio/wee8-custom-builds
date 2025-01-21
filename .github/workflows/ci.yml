@@ -66,8 +66,6 @@ jobs:
         if: startsWith(matrix.target.id, 'linux-musl')
         run: |
           apk add ninja bash git cmake clang18-dev llvm18-dev wget python3 alpine-sdk curl git tar xz py3-virtualenv py3-google-auth-httplib2 py3-httplib2 py3-distutils-extra
-          python3 -m ensurepip
-          pip3 install --upgrade setuptools pip 
 
       - name: Install dependencies on macOS
         if: startsWith(matrix.target.id, 'darwin-')
