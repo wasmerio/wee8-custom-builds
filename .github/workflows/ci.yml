@@ -122,6 +122,8 @@ jobs:
         if: matrix.target.id == 'windows-amd64'
         run: |
           ./build.ps1 
+        env: 
+          DEPOT_TOOLS_WIN_TOOLCHAIN: 0
 
       - name: Zip
         if: matrix.target.id != 'windows-amd64'
@@ -217,6 +219,26 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: artifacts/darwin-aarch64-${{matrix.tag}}/wee8.tar.xz
           asset_name: wee8-darwin-aarch64.tar.xz
+          asset_content_type: application/gzip
+          
+      - name: Upload Release Asset iOS 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/ios-${{matrix.tag}}/wee8.tar.xz
+          asset_name: wee8-ios.tar.xz
+          asset_content_type: application/gzip
+
+      - name: Upload Release Asset Android
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/android-${{matrix.tag}}/wee8.tar.xz
+          asset_name: wee8-android.tar.xz
           asset_content_type: application/gzip
 
       - name: Upload Release Asset Windows
