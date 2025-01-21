@@ -34,10 +34,10 @@ fi
 
 if [ ! -d depot_tools ]
 then 
-  git clone --single-branch --depth=1 "$DEPOT_TOOLS_REPO" depot_tools
+  git clone --single-branch --depth=1 "$DEPOT_TOOLS_REPO" /tmp/depot_tools
 fi
 
-export PATH="$(pwd)/depot_tools:$PATH"
+export PATH="$PATH:/tmp/depot_tools"
 
 # Set up google's client and fetch v8
 if [ ! -d v8 ]
