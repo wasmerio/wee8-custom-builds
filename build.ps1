@@ -6,7 +6,7 @@ if (-not (Test-Path -Path "depot_tools" -PathType Container)) {
 }
 
 echo "C:\tmp\depot_tools" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-echo "C:\tmp\depot_tools" | Out-File -FilePath $env:PATH -Encoding utf8 -Append
+$env:Path = "C:\tmp\depot_tools;" + $env:Path
 
 # Set up google's client and fetch v8
 if (-not (Test-Path -Path "v8" -PathType Container)) {
