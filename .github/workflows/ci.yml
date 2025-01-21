@@ -96,13 +96,13 @@ jobs:
           ./build.sh 
 
       - name: Build (android) 
-        if: matrix.target.os == 'linux-arm64' && matrix.target.id == "android"
+        if: matrix.target.os == 'linux-arm64' && matrix.target.id == 'android'
         shell: bash
         run: |
           ./build.sh "arm" "android"
 
       - name: Build (iOS) 
-        if: matrix.target.os == 'macos-14' && matrix.target.id == "ios"
+        if: matrix.target.os == 'macos-14' && matrix.target.id == 'ios'
         shell: bash
         run: |
           ./build.sh "arm64" "ios"
