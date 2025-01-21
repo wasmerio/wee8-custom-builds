@@ -65,8 +65,8 @@ jobs:
       - name: Install dependencies on Alpine
         if: startsWith(matrix.target.id, 'linux-musl')
         run: |
-          apk add ninja bash git cmake clang18-dev llvm18-dev xz wget python3
-      
+          apk add ninja bash git cmake clang18-dev llvm18-dev wget python3 alpine-sdk curl git python tar xz
+
       - name: Install dependencies on macOS
         if: startsWith(matrix.target.id, 'darwin-')
         shell: bash
