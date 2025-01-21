@@ -1,36 +1,47 @@
-$V8_REPO_URL = $args[1]
+$DEPOT_TOOLS_REPO="https://chromium.googlesource.com/chromium/tools/depot_tools.git"
 
-if ([string]::IsNullOrEmpty($V8_REPO_URL)) {
-    $V8_REPO_URL = "https://github.com/laper32/v8-cmake.git"
+# Clone depot-tools
+if (-not (Test-Path -Path "depot_tools" -PathType Container)) {
+  git clone --single-branch --depth=1 "$DEPOT_TOOLS_REPO" depot_tools
 }
 
-# Clone the LLVM project.
-if (-not (Test-Path -Path "v8-cmake" -PathType Container)) {
-	git clone -b "msvc" --single-branch --depth=1 "$V8_REPO_URL" v8-cmake
+# Set up google's client and fetch v8
+if (-not (Test-Path -Path "v8" -PathType Container)) {
+  gclient 
+  fetch --no-history v8
 }
 
-Set-Location v8-cmake 
-git fetch origin
+Set-Location v8
 
-# Create a directory to build the project.
-New-Item -Path "build" -Force -ItemType "directory"
-Set-Location build
+# Apply patches
 
-# Create a directory to receive the complete installation.
-New-Item -Path "install" -Force -ItemType "directory"
+$files = Get-ChildItem "../patches" -Filter *.patch 
+foreach ($f in $files){
+  git apply $f
+}
 
-# Adjust compilation based on the OS.
-$CMAKE_ARGUMENTS = ""
-
-# Adjust cross compilation
-$CROSS_COMPILE = ""
-
-# Run `cmake` to configure the project, using MSVC.
-$CMAKE_CXX_COMPILER="cl.exe"
-$CMAKE_C_COMPILER="cl.exe"
-$CMAKE_LINKER_TYPE="MSVC"
-
-cmake -G "Ninja" -DCMAKE_BUILD_TYPE=MinSizeRel  ..
+gn gen out/release --args="is_debug=false \
+  v8_symbol_level=2 \
+  is_component_build=false \
+  is_official_build=false \
+  use_custom_libcxx=false \
+  use_custom_libcxx_for_host=true \
+  use_sysroot=false \
+  use_glib=false \
+  is_clang=false \
+  v8_expose_symbols=true \
+  v8_optimized_debug=false \
+  v8_enable_sandbox=false \
+  v8_enable_i18n_support=false \
+  v8_enable_gdbjit=false \
+  v8_use_external_startup_data=false \
+  treat_warnings_as_errors=false \
+  target_cpu=\"$ARCH\"
+  v8_target_cpu=\"$ARCH\"
+  target_os=\"$OS\"
+  "
 
 # Showtime!
-cmake --build . --config MinSizeRel --target wee8
+ninja -C out/release wee8
+
+ls -laR out/release/obj

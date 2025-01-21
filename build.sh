@@ -6,16 +6,30 @@ set -o errtrace
 set -x
 
 DEPOT_TOOLS_REPO="https://chromium.googlesource.com/chromium/tools/depot_tools.git"
-case $(uname -m) in
 
-  "x86_64")
-	ARCH="x64"
-    ;;
+if [ -z "$1" ]; then 
+  case $(uname -m) in
+	"x86_64")
+	  ARCH="x64"
+      ;;
+  
+	*)
+	  ARCH=$(uname -m)
+      ;;
+  esac
+else 
+  ARCH=$1
+fi
 
-  *)
-	ARCH=$(uname -m)
-    ;;
-esac
+if [ -z "$2" ]; then 
+  case $(uname -m) in
+	*)
+	  OS="unix"
+	  ;;
+  esac
+else 
+  OS=$2
+fi
 
 
 if [ ! -d depot_tools ]
@@ -35,7 +49,7 @@ fi
 cd v8
 
 for patch in ../patches/*.patch; do 
-  git apply $patch
+  git apply "$patch"
 done 
 
 gn gen out/release --args="is_debug=false \
@@ -54,7 +68,10 @@ gn gen out/release --args="is_debug=false \
   v8_enable_gdbjit=false \
   v8_use_external_startup_data=false \
   treat_warnings_as_errors=false \
-  target_cpu=\"$ARCH\""
+  target_cpu=\"$ARCH\"
+  v8_target_cpu=\"$ARCH\"
+  target_os=\"$OS\"
+  "
 
 # Showtime!
 ninja -C out/release wee8
