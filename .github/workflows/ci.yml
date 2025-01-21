@@ -12,9 +12,9 @@ jobs:
           - id: 'linux-amd64'
             os: 'ubuntu-24.04'
             native: true
-          - id: 'linux-arm64'
-            os: 'ubuntu-24.04-arm'
-            native: true
+            #- id: 'linux-arm64'
+            #  os: 'ubuntu-24.04-arm'
+            #  native: true
           - id: 'linux-musl'
             os: 'ubuntu-24.04'
             native: true
@@ -25,9 +25,9 @@ jobs:
           - id: 'darwin-aarch64'
             os: 'macos-14'
             native: true
-          - id: 'ios'
-            os: 'macos-14'
-            native: false             # Not used in the `Build` job, but here for reference
+            #- id: 'ios'
+            #  os: 'macos-14'
+            #  native: false             # Not used in the `Build` job, but here for reference
             #- id: 'android'
             #  os: 'ubuntu-24.04'
             #  native: false             # Not used in the `Build` job, but here for reference
