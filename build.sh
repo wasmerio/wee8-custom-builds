@@ -22,10 +22,15 @@ else
 fi
 
 if [ -z "$2" ]; then 
-  case $(uname -m) in
-	*)
-	  OS="unix"
+  case $(uname -s) in
+	"Darwin")
+	  OS="mac"
 	  ;;
+	"Linux")
+	  OS="linux"
+	  ;;
+	*)
+	  OS=$(uname -s)
   esac
 else 
   OS=$2
