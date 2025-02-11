@@ -15,16 +15,16 @@ jobs:
             #- id: 'linux-arm64'
             #  os: 'ubuntu-24.04-arm'
             #  native: true
-          - id: 'linux-musl'
-            os: 'ubuntu-24.04'
-            native: true
-            container: alpine:3.19
-          - id: 'darwin-amd64'
-            os: 'macos-13'
-            native: true
-          - id: 'darwin-aarch64'
-            os: 'macos-14'
-            native: true
+            #- id: 'linux-musl'
+            #  os: 'ubuntu-24.04'
+            #  native: true
+            #  container: alpine:3.19
+            #- id: 'darwin-amd64'
+            #  os: 'macos-13'
+            #  native: true
+            #- id: 'darwin-aarch64'
+            #  os: 'macos-14'
+            #  native: true
             #- id: 'ios'
             #  os: 'macos-14'
             #  native: false             # Not used in the `Build` job, but here for reference

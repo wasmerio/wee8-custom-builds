@@ -62,7 +62,7 @@ gn gen out/release --args="is_debug=false \
   is_component_build=false \
   is_official_build=false \
   use_custom_libcxx=false \
-  use_custom_libcxx_for_host=true \
+  use_custom_libcxx_for_host=false \
   use_sysroot=false \
   use_glib=false \
   is_clang=false \
