@@ -48,7 +48,7 @@ export PATH="$PATH:/tmp/depot_tools"
 if [ ! -d v8 ]
 then 
   gclient 
-  fetch --no-history v8
+  fetch v8
 fi
 
 cd v8

@@ -11,7 +11,7 @@ $env:Path = "C:\tmp\depot_tools;" + $env:Path
 # Set up google's client and fetch v8
 if (-not (Test-Path -Path "v8" -PathType Container)) {
   gclient 
-  fetch --no-history v8
+  fetch v8
 }
 
 Set-Location v8
