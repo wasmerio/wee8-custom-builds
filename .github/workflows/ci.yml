@@ -2,6 +2,9 @@ name: Build
 
 on: [push]
 
+env: 
+  V8_COMMIT: a173aac0492
+
 jobs:
   build:
     name: Build

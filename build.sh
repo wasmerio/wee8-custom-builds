@@ -53,6 +53,8 @@ fi
 
 cd v8
 
+git checkout "$V8_COMMIT"
+
 for patch in ../patches/*.patch; do 
   git apply "$patch"
 done 
