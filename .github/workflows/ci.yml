@@ -102,7 +102,7 @@ jobs:
           ./build.sh 
 
       - name: Build (android) 
-        if: matrix.target.os == 'ubuntu-24.04' && matrix.target.id == 'android'
+        if: matrix.target.id == 'android'
         shell: bash
         run: |
           ./build.sh "arm" "android"
