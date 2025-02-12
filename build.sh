@@ -3,54 +3,95 @@
 # Display all commands before executing them.
 set -o errexit
 set -o errtrace
+set -x
 
-V8_REPO_URL=${2:-https://github.com/laper32/v8-cmake.git}
-LLVM_CROSS="$3"
+DEPOT_TOOLS_REPO="https://chromium.googlesource.com/chromium/tools/depot_tools.git"
 
-if [[ -z "$V8_REPO_URL" ]]
-then
-  echo "Usage: $0 <v8-repository-url>"
-  echo
-  echo "# Arguments"
-  echo "  v8-repository-url  The URL used to clone v8-cmake sources (default: $V8_REPO_URL)"
-
-  exit 1
+if [ -z "$1" ]; then 
+  case $(uname -m) in
+	"x86_64")
+	  ARCH="x64"
+      ;;
+  
+	*)
+	  ARCH=$(uname -m)
+      ;;
+  esac
+else 
+  ARCH=$1
 fi
 
-if [ ! -d v8-cmake ]
-then
-	git clone -b "msvc" --single-branch --depth=1 "$V8_REPO_URL" v8-cmake
+if [ -z "$2" ]; then 
+  case $(uname -s) in
+	"Darwin")
+	  OS="mac"
+	  ;;
+	"Linux")
+	  OS="linux"
+	  ;;
+	*)
+	  OS=$(uname -s)
+  esac
+else 
+  OS=$2
 fi
 
-cd v8-cmake 
 
-# Create a directory to build the project.
-mkdir -p build
-cd build
+if [ ! -d depot_tools ]
+then 
+  git clone --single-branch --depth=1 "$DEPOT_TOOLS_REPO" /tmp/depot_tools
+fi
 
-# Create a directory to receive the complete installation.
-mkdir -p install
+export PATH="$PATH:/tmp/depot_tools"
 
-# Adjust compilation based on the OS.
-CMAKE_ARGUMENTS=""
+# Set up google's client and fetch v8
+if [ ! -d v8 ]
+then 
+  gclient 
+  fetch v8
+  if [ "$OS" == "android" ] 
+  then
+	echo "target_os = [\"android\"];" >> .gclient
+	gclient sync
+  fi
+  if [ "$OS" == "ios" ] 
+  then
+	echo "target_os = [\"ios\"];" >> .gclient
+	gclient sync
+  fi
 
-case "${OSTYPE}" in
-    darwin*) ;;
-    linux*) ;;
-    *) ;;
-esac
+fi
 
-## Adjust cross compilation
-#CROSS_COMPILE=""
-#
-#case "${LLVM_CROSS}" in
-#    aarch64*) CROSS_COMPILE="-DLLVM_HOST_TRIPLE=aarch64-linux-gnu" ;;
-#    riscv64*) CROSS_COMPILE="-DLLVM_HOST_TRIPLE=riscv64-linux-gnu" ;;
-#    *) ;;
-#esac
+cd v8
 
-# Run `cmake` to configure the project.
-cmake -G "Ninja" -DCMAKE_BUILD_TYPE=MinSizeRel ..
+git checkout "$V8_COMMIT"
+
+for patch in ../patches/*.patch; do 
+  git apply "$patch"
+done 
+
+gn gen out/release --args="is_debug=false \
+  v8_symbol_level=2 \
+  is_component_build=false \
+  is_official_build=false \
+  use_custom_libcxx=false \
+  use_custom_libcxx_for_host=false \
+  use_sysroot=false \
+  use_glib=false \
+  is_clang=false \
+  v8_expose_symbols=true \
+  v8_optimized_debug=false \
+  v8_enable_sandbox=false \
+  v8_enable_i18n_support=false \
+  v8_enable_gdbjit=false \
+  v8_use_external_startup_data=false \
+  treat_warnings_as_errors=false \
+  target_cpu=\"$ARCH\"
+  v8_target_cpu=\"$ARCH\"
+  target_os=\"$OS\"
+  "
 
 # Showtime!
-cmake --build . --config MinSizeRel --target wee8
+ninja -C out/release wee8
+
+ls -laR out/release/obj
