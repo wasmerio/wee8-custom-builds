@@ -59,6 +59,13 @@ jobs:
         run: |
           sudo apt-get install ninja-build clang libglib2.0-dev -y
 
+      - name: Install dependencies on Ubuntu (android)
+        if: startsWith(matrix.target.id, 'android')
+        shell: bash
+        run: |
+          sudo apt install gcc make gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
+          sudo apt-get install ninja-build clang libglib2.0-dev -y
+
       - name: Install dependencies on Ubuntu (arm64)
         if: startsWith(matrix.target.id, 'linux-arm64')
         shell: bash
@@ -105,7 +112,7 @@ jobs:
         if: matrix.target.id == 'android'
         shell: bash
         run: |
-          ./build.sh "arm" "android"
+          ./build.sh "arm64" "android"
 
       - name: Build (iOS) 
         if: matrix.target.os == 'macos-14' && matrix.target.id == 'ios'
