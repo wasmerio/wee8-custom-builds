@@ -28,9 +28,9 @@ jobs:
           - id: 'darwin-aarch64'
             os: 'macos-14'
             native: true
-          - id: 'ios'
-            os: 'macos-14'
-            native: false             # Not used in the `Build` job, but here for reference
+            #- id: 'ios'
+            #  os: 'macos-14'
+            #  native: false             # Not used in the `Build` job, but here for reference
           - id: 'android'
             os: 'ubuntu-latest-4-cores'
             native: false             # Not used in the `Build` job, but here for reference
