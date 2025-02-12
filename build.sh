@@ -49,6 +49,17 @@ if [ ! -d v8 ]
 then 
   gclient 
   fetch v8
+  if [ "$OS" == "android" ] 
+  then
+	echo "target_os = [\"android\"];" >> .gclient
+	gclient sync
+  fi
+  if [ "$OS" == "ios" ] 
+  then
+	echo "target_os = [\"ios\"];" >> .gclient
+	gclient sync
+  fi
+
 fi
 
 cd v8
