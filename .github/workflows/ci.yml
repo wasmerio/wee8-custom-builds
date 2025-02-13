@@ -3,7 +3,7 @@ name: Build
 on: [push]
 
 env: 
-  V8_COMMIT: a173aac0492
+  V8_COMMIT: e8293d2b878ecf639f2c55219068a8b780e01030
 
 jobs:
   build:
