@@ -73,7 +73,8 @@ done
 if [ "$OS" == "ios" ]
 then
 gn gen out/release --args="is_debug=false \
-  v8_symbol_level=2 \
+  v8_symbol_level=0 \
+  symbol_level = 0 \
   is_component_build=false \
   is_official_build=false \
   use_custom_libcxx=false \
@@ -88,14 +89,17 @@ gn gen out/release --args="is_debug=false \
   v8_enable_gdbjit=false \
   v8_use_external_startup_data=false \
   treat_warnings_as_errors=false \
-  target_cpu=\"$ARCH\"
-  v8_target_cpu=\"$ARCH\"
-  target_os=\"$OS\"
-  target_environment=\"device\"
+  v8_enable_fast_mksnapshot = true \
+  v8_enable_handle_zapping = false \
+  target_cpu=\"$ARCH\" \
+  v8_target_cpu=\"$ARCH\" \
+  target_os=\"$OS\" \
+  target_environment=\"device\" \
   "
 else 
 gn gen out/release --args="is_debug=false \
-  v8_symbol_level=2 \
+  v8_symbol_level=0 \
+  symbol_level = 0 \
   is_component_build=false \
   is_official_build=false \
   use_custom_libcxx=false \
@@ -110,9 +114,11 @@ gn gen out/release --args="is_debug=false \
   v8_enable_gdbjit=false \
   v8_use_external_startup_data=false \
   treat_warnings_as_errors=false \
-  target_cpu=\"$ARCH\"
-  v8_target_cpu=\"$ARCH\"
-  target_os=\"$OS\"
+  v8_enable_fast_mksnapshot = true \
+  v8_enable_handle_zapping = false \
+  target_cpu=\"$ARCH\" \
+  v8_target_cpu=\"$ARCH\" \
+  target_os=\"$OS\" \
   "
 fi
 # Showtime!
