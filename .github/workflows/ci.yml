@@ -110,7 +110,7 @@ jobs:
 
       - name: Setup MSVC (Windows) 
         uses: ilammy/msvc-dev-cmd@v1
-        if: matrix.target.id == 'windows-amd64'
+        if: matrix.target.id == 'windows-amd64-msvc'
 
       - name: Build (native target) 
         if: matrix.target.id != 'windows-amd64' && matrix.target.id != 'linux-musl' && matrix.target.native == true
@@ -139,14 +139,15 @@ jobs:
           VPYTHON_BYPASS: "manually managed python not supported by chrome operations"
 
       - name: Build (Windows)
-        if: matrix.target.id == 'windows-amd64'
+        if: matrix.target.id == 'windows-amd64-msvc'
         run: |
+          echo "DEPOT_TOOLS_WIN_TOOLCHAIN=0" >> $env:GITHUB_ENV
           ./build.ps1 
         env: 
           DEPOT_TOOLS_WIN_TOOLCHAIN: 0
 
       - name: Zip
-        if: matrix.target.id != 'windows-amd64'
+        if: matrix.target.id != 'windows-amd64-msvc'
         shell: bash
         run: |
           mkdir -p dist
@@ -154,7 +155,7 @@ jobs:
           ls -lh dist/wee8.tar.xz
 
       - name: Zip (Windows)
-        if: matrix.target.id == 'windows-amd64'
+        if: matrix.target.id == 'windows-amd64-msvc'
         shell: bash
         run: |
           mkdir -p dist
