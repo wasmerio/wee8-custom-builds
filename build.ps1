@@ -1,3 +1,5 @@
+@echo on
+
 $DEPOT_TOOLS_REPO="https://chromium.googlesource.com/chromium/tools/depot_tools.git"
 
 # Clone depot-tools
@@ -17,11 +19,13 @@ if (-not (Test-Path -Path "v8" -PathType Container)) {
 Set-Location v8
 
 git checkout $V8_COMMIT 
+echo "checked out commit $V8_COMMIT"
 
 # Apply patches
 
 $files = Get-ChildItem "../patches" -Filter *.patch 
 foreach ($f in $files){
+  echo "Applying patch $f"
   git apply $f
 }
 
