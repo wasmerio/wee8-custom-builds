@@ -113,7 +113,7 @@ jobs:
         if: matrix.target.id == 'windows-amd64-msvc'
 
       - name: Build (native target) 
-        if: matrix.target.id != 'windows-amd64' && matrix.target.id != 'linux-musl' && matrix.target.native == true
+        if: matrix.target.id != 'windows-amd64' && matrix.target.id != 'linux-arm64' && matrix.target.id != 'linux-musl' && matrix.target.native == true
         shell: bash
         run: |
           ./build.sh 
@@ -123,6 +123,13 @@ jobs:
         shell: bash
         run: |
           ./build.sh "arm64" "android"
+
+      - name: Build (linux-arm64) 
+        if: matrix.target.id == 'linux-arm64'
+        shell: bash
+        run: |
+          ./build.sh "arm64"
+
 
       - name: Build (iOS) 
         if: matrix.target.os == 'macos-14' && matrix.target.id == 'ios'
