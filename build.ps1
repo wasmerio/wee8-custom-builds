@@ -1,4 +1,4 @@
-@echo on
+Set-PSDebug -Trace 1
 
 $DEPOT_TOOLS_REPO="https://chromium.googlesource.com/chromium/tools/depot_tools.git"
 
