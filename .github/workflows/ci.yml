@@ -113,7 +113,7 @@ jobs:
         if: matrix.target.id == 'windows-amd64-msvc'
 
       - name: Build (native target) 
-        if: matrix.target.id != 'windows-amd64' && matrix.target.id != 'linux-arm64' && matrix.target.id != 'linux-musl' && matrix.target.native == true
+        if: matrix.target.id != 'windows-amd64-msvc' && matrix.target.id != 'windows-amd64-mingw' && matrix.target.id != 'linux-arm64' && matrix.target.id != 'linux-musl' && matrix.target.native == true
         shell: bash
         run: |
           ./build.sh 
@@ -145,11 +145,19 @@ jobs:
         env: 
           VPYTHON_BYPASS: "manually managed python not supported by chrome operations"
 
-      - name: Build (Windows)
+      - name: Build (Windows-msvc)
         if: matrix.target.id == 'windows-amd64-msvc'
         run: |
           echo "DEPOT_TOOLS_WIN_TOOLCHAIN=0" >> $env:GITHUB_ENV
           ./build.ps1 
+        env: 
+          DEPOT_TOOLS_WIN_TOOLCHAIN: 0
+
+      - name: Build (native target) 
+        if: matrix.target.id == 'windows-amd64-mingw'
+        shell: bash
+        run: |
+          ./build.sh 
         env: 
           DEPOT_TOOLS_WIN_TOOLCHAIN: 0
 
