@@ -18,8 +18,8 @@ if (-not (Test-Path -Path "v8" -PathType Container)) {
 
 Set-Location v8
 
-git checkout $V8_COMMIT 
-echo "checked out commit $V8_COMMIT"
+git checkout $env:V8_COMMIT 
+echo "checked out commit '$env:V8_COMMIT''"
 
 # Apply patches
 
@@ -30,7 +30,7 @@ foreach ($f in $files){
 }
 
 gn gen out/release --args="is_debug=false v8_symbol_level=2 is_component_build=false is_official_build=false use_custom_libcxx=false use_custom_libcxx_for_host=true use_sysroot=false use_glib=false is_clang=false v8_expose_symbols=true v8_optimized_debug=false v8_enable_sandbox=false v8_enable_i18n_support=false v8_enable_gdbjit=false v8_use_external_startup_data=false 
-  treat_warnings_as_errors=false target_cpu=\"$ARCH\" v8_target_cpu=\"$ARCH\" target_os=\"$OS\""
+  treat_warnings_as_errors=false target_cpu=\"$env:ARCH\" v8_target_cpu=\"$env:ARCH\" target_os=\"$env:OS\""
 
 # Showtime!
 ninja -C out/release wee8
