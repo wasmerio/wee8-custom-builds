@@ -34,5 +34,3 @@ gn gen out/release --args="is_debug=false v8_symbol_level=2 is_component_build=f
 
 # Showtime!
 ninja -C out/release wee8
-
-ls -laR out/release/obj
