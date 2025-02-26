@@ -100,9 +100,9 @@ jobs:
 
       - name: Setup MSVC (Windows) 
         uses: ilammy/msvc-dev-cmd@v1
-        if: matrix.target.id == 'windows-amd64-msvc'
         with:
           sdk: "10.0.22621.0"
+        if: matrix.target.id == 'windows-amd64-msvc'
 
       - name: Build (native target) 
         if: matrix.target.id != 'windows-amd64-msvc' && matrix.target.id != 'linux-arm64' && matrix.target.id != 'linux-musl' && matrix.target.native == true
