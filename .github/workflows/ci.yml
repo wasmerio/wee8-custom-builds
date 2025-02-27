@@ -35,7 +35,7 @@ jobs:
             os: 'ubuntu-22.04'
             native: false             # Not used in the `Build` job, but here for reference
           - id: 'windows-amd64-msvc'
-            os: 'windows-2022'
+            os: 'windows-latest'
             native: true
             # When unpacking an archive on Windows, the symlinks can't be
             # created unless the target path already exists. This causes
