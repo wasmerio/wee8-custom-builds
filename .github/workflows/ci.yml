@@ -101,7 +101,7 @@ jobs:
       - name: Setup MSVC (Windows) 
         uses: ilammy/msvc-dev-cmd@v1
         with:
-          sdk: "10.0.22621.2428"
+          vsversion: "2022"
         if: matrix.target.id == 'windows-amd64-msvc'
 
       - name: Build (native target) 
