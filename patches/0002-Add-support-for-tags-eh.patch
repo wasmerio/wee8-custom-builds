@@ -1,16 +1,16 @@
-From 1c0a90c83076b0bcd783391bd16521d78e6fc09c Mon Sep 17 00:00:00 2001
+From 43eb17bfbe5da4058781968906e913abb214e127 Mon Sep 17 00:00:00 2001
 From: Edoardo Marangoni <ecmm@anche.no>
-Date: Mon, 20 Jan 2025 15:20:40 +0100
-Subject: [PATCH 2/2] Add support for tags (eh)
+Date: Wed, 12 Mar 2025 16:55:54 +0100
+Subject: [PATCH 2/3] Add support for tags (eh)
 
 ---
- src/wasm/c-api.cc            | 171 +++++++++++++++++++++++++++++++++--
+ src/wasm/c-api.cc            | 184 +++++++++++++++++++++++++++++++++--
  third_party/wasm-api/wasm.h  |  30 ++++++
  third_party/wasm-api/wasm.hh |  45 ++++++++-
- 3 files changed, 239 insertions(+), 7 deletions(-)
+ 3 files changed, 252 insertions(+), 7 deletions(-)
 
 diff --git a/src/wasm/c-api.cc b/src/wasm/c-api.cc
-index 4ad54f3f6cb..bef91d8e38c 100644
+index 8650fb3549b..15fceadff2e 100644
 --- a/src/wasm/c-api.cc
 +++ b/src/wasm/c-api.cc
 @@ -44,6 +44,7 @@
@@ -258,7 +258,34 @@ index 4ad54f3f6cb..bef91d8e38c 100644
  // Table Types
  
  WASM_DEFINE_TYPE(tabletype, wasm::TableType)
-@@ -3355,6 +3490,18 @@ void wasm_global_set(wasm_global_t* global, const wasm_val_t* val) {
+@@ -2884,6 +3019,12 @@ wasm_globaltype_t* wasm_externtype_as_globaltype(wasm_externtype_t* et) {
+                    static_cast<wasm::GlobalType*>(reveal_externtype(et)))
+              : nullptr;
+ }
++wasm_tagtype_t* wasm_externtype_as_tagtype(wasm_externtype_t* et) {
++  return et->kind() == wasm::ExternKind::TAG
++             ? hide_tagtype(
++                   static_cast<wasm::TagType*>(reveal_externtype(et)))
++             : nullptr;
++}
+ wasm_tabletype_t* wasm_externtype_as_tabletype(wasm_externtype_t* et) {
+   return et->kind() == wasm::ExternKind::TABLE
+              ? hide_tabletype(
+@@ -2911,6 +3052,13 @@ const wasm_globaltype_t* wasm_externtype_as_globaltype_const(
+                    static_cast<const wasm::GlobalType*>(reveal_externtype(et)))
+              : nullptr;
+ }
++const wasm_tagtype_t* wasm_externtype_as_tagtype_const(
++    const wasm_externtype_t* et) {
++  return et->kind() == wasm::ExternKind::TAG
++             ? hide_tagtype(
++                   static_cast<const wasm::TagType*>(reveal_externtype(et)))
++             : nullptr;
++}
+ const wasm_tabletype_t* wasm_externtype_as_tabletype_const(
+     const wasm_externtype_t* et) {
+   return et->kind() == wasm::ExternKind::TABLE
+@@ -3358,6 +3506,18 @@ void wasm_global_set(wasm_global_t* global, const wasm_val_t* val) {
    global->set(val_.it);
  }
  
@@ -277,7 +304,7 @@ index 4ad54f3f6cb..bef91d8e38c 100644
  // Table Instances
  
  WASM_DEFINE_REF(table, wasm::Table)
-@@ -3431,6 +3578,9 @@ wasm_extern_t* wasm_func_as_extern(wasm_func_t* func) {
+@@ -3434,6 +3594,9 @@ wasm_extern_t* wasm_func_as_extern(wasm_func_t* func) {
  wasm_extern_t* wasm_global_as_extern(wasm_global_t* global) {
    return hide_extern(static_cast<wasm::Extern*>(reveal_global(global)));
  }
@@ -287,7 +314,7 @@ index 4ad54f3f6cb..bef91d8e38c 100644
  wasm_extern_t* wasm_table_as_extern(wasm_table_t* table) {
    return hide_extern(static_cast<wasm::Extern*>(reveal_table(table)));
  }
-@@ -3444,6 +3594,9 @@ const wasm_extern_t* wasm_func_as_extern_const(const wasm_func_t* func) {
+@@ -3447,6 +3610,9 @@ const wasm_extern_t* wasm_func_as_extern_const(const wasm_func_t* func) {
  const wasm_extern_t* wasm_global_as_extern_const(const wasm_global_t* global) {
    return hide_extern(static_cast<const wasm::Extern*>(reveal_global(global)));
  }
@@ -297,7 +324,7 @@ index 4ad54f3f6cb..bef91d8e38c 100644
  const wasm_extern_t* wasm_table_as_extern_const(const wasm_table_t* table) {
    return hide_extern(static_cast<const wasm::Extern*>(reveal_table(table)));
  }
-@@ -3457,6 +3610,9 @@ wasm_func_t* wasm_extern_as_func(wasm_extern_t* external) {
+@@ -3460,6 +3626,9 @@ wasm_func_t* wasm_extern_as_func(wasm_extern_t* external) {
  wasm_global_t* wasm_extern_as_global(wasm_extern_t* external) {
    return hide_global(external->global());
  }
@@ -307,7 +334,7 @@ index 4ad54f3f6cb..bef91d8e38c 100644
  wasm_table_t* wasm_extern_as_table(wasm_extern_t* external) {
    return hide_table(external->table());
  }
-@@ -3471,6 +3627,9 @@ const wasm_global_t* wasm_extern_as_global_const(
+@@ -3474,6 +3643,9 @@ const wasm_global_t* wasm_extern_as_global_const(
      const wasm_extern_t* external) {
    return hide_global(external->global());
  }
@@ -416,10 +443,10 @@ index 50a05297712..4f37e8ff891 100644
  WASM_API_EXTERN const wasm_memory_t* wasm_extern_as_memory_const(const wasm_extern_t*);
  
 diff --git a/third_party/wasm-api/wasm.hh b/third_party/wasm-api/wasm.hh
-index b079cf3934a..42671d01a6f 100644
+index 08a78aeb362..0306a2d564f 100644
 --- a/third_party/wasm-api/wasm.hh
 +++ b/third_party/wasm-api/wasm.hh
-@@ -294,13 +294,14 @@ public:
+@@ -295,13 +295,14 @@ public:
  // External Types
  
  enum class ExternKind : uint8_t {
@@ -435,7 +462,7 @@ index b079cf3934a..42671d01a6f 100644
  
  class WASM_API_EXTERN ExternType {
    friend class destroyer;
-@@ -317,11 +318,13 @@ public:
+@@ -318,11 +319,13 @@ public:
  
    auto func() -> FuncType*;
    auto global() -> GlobalType*;
@@ -449,7 +476,7 @@ index b079cf3934a..42671d01a6f 100644
    auto table() const -> const TableType*;
    auto memory() const -> const MemoryType*;
  };
-@@ -369,6 +372,25 @@ public:
+@@ -370,6 +373,25 @@ public:
  };
  
  
@@ -475,7 +502,7 @@ index b079cf3934a..42671d01a6f 100644
  // Table Types
  
  class WASM_API_EXTERN TableType : public ExternType {
-@@ -692,6 +714,7 @@ class Func;
+@@ -693,6 +715,7 @@ class Func;
  class Global;
  class Table;
  class Memory;
@@ -483,7 +510,7 @@ index b079cf3934a..42671d01a6f 100644
  
  class WASM_API_EXTERN Extern : public Ref {
    friend class destroyer;
-@@ -709,11 +732,13 @@ public:
+@@ -710,11 +733,13 @@ public:
  
    auto func() -> Func*;
    auto global() -> Global*;
@@ -497,7 +524,7 @@ index b079cf3934a..42671d01a6f 100644
    auto table() const -> const Table*;
    auto memory() const -> const Memory*;
  };
-@@ -766,6 +791,24 @@ protected:
+@@ -767,6 +792,24 @@ protected:
  };
  
  
@@ -523,5 +550,5 @@ index b079cf3934a..42671d01a6f 100644
  
  class WASM_API_EXTERN Table : public Extern {
 -- 
-2.48.1
+2.39.5 (Apple Git-154)
 
