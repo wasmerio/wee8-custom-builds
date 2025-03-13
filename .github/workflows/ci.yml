@@ -98,16 +98,16 @@ jobs:
         run: |
           choco install ninja
 
-          #- name: Setup MSVC (Windows) 
-          #  uses: ilammy/msvc-dev-cmd@v1
-          #  with:
-          #    vsversion: "2022"
-          #  if: matrix.target.id == 'windows-amd64-msvc'
+      - name: Setup MSVC (Windows) 
+        uses: ilammy/msvc-dev-cmd@v1
+        with: 
+          sdk: "10.0.22621.0"
+        if: matrix.target.id == 'windows-amd64-msvc'
 
-      - name: "Update windows SDK"
-        uses: fbactions/setup-winsdk@v1
-        with:
-          winsdk-build-version: "26100" 
+          #- name: "Update windows SDK"
+          #  uses: fbactions/setup-winsdk@v1
+          #  with:
+          #    winsdk-build-version: "26100" 
 
       - name: Build (native target) 
         if: matrix.target.id != 'windows-amd64-msvc' && matrix.target.id != 'linux-arm64' && matrix.target.id != 'linux-musl' && matrix.target.native == true
