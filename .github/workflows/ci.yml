@@ -99,7 +99,7 @@ jobs:
           choco install ninja
 
       - name: Setup MSVC (Windows) 
-        uses: ilammy/msvc-dev-cmd@v1
+        uses: ilammy/msvc-dev-cmd@v1.13.0
         with: 
           sdk: "10.0.22621.2428"
         if: matrix.target.id == 'windows-amd64-msvc'
