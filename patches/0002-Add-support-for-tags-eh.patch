@@ -97,17 +97,6 @@ index 4ad54f3f6cb..bef91d8e38c 100644
  // Table Types
  
  struct TableTypeImpl : ExternTypeImpl {
-@@ -983,9 +1037,7 @@ class RefImpl {
- 
-   i::Isolate* isolate() const { return store()->i_isolate(); }
- 
--  i::Handle<JSType> v8_object() const {
--    return i::Cast<JSType>(val_);
--  }
-+  i::Handle<JSType> v8_object() const { return i::Cast<JSType>(val_); }
- 
-   void* get_host_info() const {
-     v8::Isolate::Scope isolate_scope(store()->isolate());
 @@ -1416,6 +1468,8 @@ WASM_EXPORT auto Extern::kind() const -> ExternKind {
    if (IsWasmGlobalObject(*obj)) return wasm::ExternKind::GLOBAL;
    if (IsWasmTableObject(*obj)) return wasm::ExternKind::TABLE;
