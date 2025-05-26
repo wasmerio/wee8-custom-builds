@@ -175,9 +175,9 @@ index 4ad54f3f6cb..bef91d8e38c 100644
 +      engine->type_canonicalizer()->AddRecursiveGroup(&sig);
 +
 +  auto rt_tag = i::WasmExceptionTag::New(isolate, 0);
-+  i::Handle<i::WasmTagObject> tag_obj =
++  i::DirectHandle<i::WasmTagObject> tag_obj =
 +      i::WasmTagObject::New(isolate, &sig, canonical_type_index, rt_tag,
-+                            i::Handle<i::WasmTrustedInstanceData>());
++                            i::DirectHandle<i::WasmTrustedInstanceData>());
 +
 +  auto tag = implement<Tag>::type::make(store, tag_obj);
 +  assert(tag);
