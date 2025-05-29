@@ -58,7 +58,7 @@ gclient
 # Set up google's client and fetch v8
 if [ ! -d v8 ]
 then 
-  fetch v8 -r $V8_TAG
+  fetch v8
   if [ "$OS" == "android" ] 
   then
 	echo "target_os = [\"android\"];" >> .gclient
@@ -69,11 +69,11 @@ then
 	echo "target_os = [\"ios\"];" >> .gclient
 	gclient sync
   fi
-else
-  cd v8
-  gclient sync --with_branch_heads --with_tags --revision src@$V8_TAG
-  git reset --hard
 fi
+
+cd v8
+git reset --hard
+gclient sync --with_branch_heads --with_tags --revision src@$V8_TAG
 
 for patch in ../patches/*.patch; do 
   git apply "$patch"
