@@ -6,6 +6,11 @@ set -o errtrace
 set -x
 
 DEPOT_TOOLS_REPO="https://chromium.googlesource.com/chromium/tools/depot_tools.git"
+DEPOT_TOOLS_DIR="/tmp/depot_tools"
+CURRENT_DIR=$(pwd)
+
+DEPOT_TOOLS_COMMIT=${DEPOT_TOOLS_COMMIT:-"f7e85d34707e685410ce2a61cdb281d27d29d144"}
+V8_COMMIT=${V8_COMMIT:-"3715090227b3872d8a4e1f206d051ec3ec5ddb8b"}
 
 if [ -z "$1" ]; then 
   case $(uname -m) in
@@ -37,17 +42,22 @@ else
 fi
 
 
-if [ ! -d depot_tools ]
+if [ ! -d "$DEPOT_TOOLS_DIR" ]
 then 
-  git clone --single-branch --depth=1 "$DEPOT_TOOLS_REPO" /tmp/depot_tools
+  git clone "$DEPOT_TOOLS_REPO" "$DEPOT_TOOLS_DIR"
 fi
 
-export PATH="$PATH:/tmp/depot_tools"
+cd "$DEPOT_TOOLS_DIR"
+git checkout "$DEPOT_TOOLS_COMMIT"
+export PATH="$PATH:$DEPOT_TOOLS_DIR"
+
+cd "$CURRENT_DIR"
+
+gclient
 
 # Set up google's client and fetch v8
 if [ ! -d v8 ]
 then 
-  gclient 
   fetch v8
   if [ "$OS" == "android" ] 
   then
@@ -59,16 +69,15 @@ then
 	echo "target_os = [\"ios\"];" >> .gclient
 	gclient sync
   fi
-
 fi
 
 cd v8
-
+# git reset --hard
 git checkout "$V8_COMMIT"
 
 for patch in ../patches/*.patch; do 
   git apply "$patch"
-done 
+done
 
 if [ "$OS" == "ios" ]
 then
