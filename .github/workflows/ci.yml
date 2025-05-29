@@ -33,7 +33,7 @@ jobs:
           #  os: 'ubuntu-22.04'
           #  native: false             # Not used in the `Build` job, but here for reference
           - id: 'windows-amd64-msvc'
-            os: 'windows-latest'
+            os: 'windows-2022'
             native: true
           # - id: 'linux-arm64'
           #   os: 'ubuntu-22.04-arm'
@@ -126,8 +126,8 @@ jobs:
       - name: "Update windows SDK"
         uses: fbactions/setup-winsdk@v1
         if: matrix.target.id == 'windows-amd64-msvc'
-        with:
-          winsdk-build-version: "26100"
+        # with:
+        #   winsdk-build-version: "26100"
 
       - name: Build (native target) 
         if: matrix.target.id != 'windows-amd64-msvc' && matrix.target.id != 'linux-arm64' && matrix.target.id != 'linux-musl' && matrix.target.native == true
