@@ -68,6 +68,10 @@ jobs:
 
     runs-on: ${{ matrix.target.os }}
     container: ${{ matrix.target.container }}
+
+    env:
+      LIB: ${{ contains(matrix.target.id, 'windows') && 'wee8.lib' || 'libwee8.a' }}
+
     steps:
       - name: Check out the code
         uses: actions/checkout@v3
@@ -171,19 +175,10 @@ jobs:
           DEPOT_TOOLS_WIN_TOOLCHAIN: 0
 
       - name: Zip
-        if: matrix.target.id != 'windows-amd64-msvc'
         shell: bash
         run: |
           mkdir -p dist
-          tar --directory v8/out/release --create --xz --verbose ${{ matrix.target.tar_extra_args }} --file dist/wee8.tar.xz obj/libwee8.a
-          ls -lh dist/wee8.tar.xz
-
-      - name: Zip (Windows)
-        if: matrix.target.id == 'windows-amd64-msvc'
-        shell: bash
-        run: |
-          mkdir -p dist
-          tar --directory v8/out/release --create --xz --verbose ${{ matrix.target.tar_extra_args }} --file dist/wee8.tar.xz obj/wee8.lib
+          tar --directory v8/out/release --create --xz --verbose ${{ matrix.target.tar_extra_args }} --file dist/wee8.tar.xz obj/${{ env.LIB }}
           ls -lh dist/wee8.tar.xz
 
       # - name: Zip
