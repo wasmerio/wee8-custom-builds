@@ -161,15 +161,17 @@ jobs:
     runs-on: ubuntu-latest
     permissions: write-all
     needs: [build]
-    strategy:
-      matrix:
-        tag: ['11.7']
+    if: startsWith(github.ref, 'refs/tags/')
 
     steps:
       - name: Download the Artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+
+      - name: Get tag name
+        id: get_tag
+        run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Inspect
         shell: bash
@@ -182,8 +184,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag: ${{ matrix.tag }}
-          name: Release ${{ matrix.tag }}
+          tag: ${{ steps.get_tag.outputs.TAG }}
+          name: Release ${{ steps.get_tag.outputs.TAG }}
           allowUpdates: true
           draft: false
           prerelease: false
@@ -194,7 +196,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/linux-amd64-${{matrix.tag}}/wee8.tar.xz
+          asset_path: artifacts/linux-amd64-${{ steps.get_tag.outputs.TAG }}/wee8.tar.xz
           asset_name: wee8-linux-amd64.tar.xz
           asset_content_type: application/gzip
 
@@ -204,7 +206,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/linux-musl-${{matrix.tag}}/wee8.tar.xz
+          asset_path: artifacts/linux-musl-${{ steps.get_tag.outputs.TAG }}/wee8.tar.xz
           asset_name: wee8-linux-musl.tar.xz
           asset_content_type: application/gzip
 
@@ -214,7 +216,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/darwin-amd64-${{matrix.tag}}/wee8.tar.xz
+          asset_path: artifacts/darwin-amd64-${{ steps.get_tag.outputs.TAG }}/wee8.tar.xz
           asset_name: wee8-darwin-amd64.tar.xz
           asset_content_type: application/gzip
 
@@ -224,7 +226,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/darwin-aarch64-${{matrix.tag}}/wee8.tar.xz
+          asset_path: artifacts/darwin-aarch64-${{ steps.get_tag.outputs.TAG }}/wee8.tar.xz
           asset_name: wee8-darwin-aarch64.tar.xz
           asset_content_type: application/gzip
           
@@ -234,7 +236,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/ios-${{matrix.tag}}/wee8.tar.xz
+          asset_path: artifacts/ios-${{ steps.get_tag.outputs.TAG }}/wee8.tar.xz
           asset_name: wee8-ios.tar.xz
           asset_content_type: application/gzip
 
@@ -244,7 +246,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/android-${{matrix.tag}}/wee8.tar.xz
+          asset_path: artifacts/android-${{ steps.get_tag.outputs.TAG }}/wee8.tar.xz
           asset_name: wee8-android.tar.xz
           asset_content_type: application/gzip
 
@@ -254,6 +256,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/windows-amd64-${{matrix.tag}}/wee8.tar.xz
+          asset_path: artifacts/windows-amd64-${{ steps.get_tag.outputs.TAG }}/wee8.tar.xz
           asset_name: wee8-windows-amd64.tar.xz
           asset_content_type: application/gzip
