@@ -1,14 +1,14 @@
-From 3164e611f9406a67ed8ca67184d8153974620ec0 Mon Sep 17 00:00:00 2001
+From 5a43a570d3d160d732ba7a509b01e5897162be86 Mon Sep 17 00:00:00 2001
 From: Edoardo Marangoni <ecmm@anche.no>
 Date: Tue, 21 Jan 2025 09:49:53 +0100
-Subject: [PATCH] Enable exnrefs by default
+Subject: [PATCH 3/3] Enable exnrefs by default
 
 ---
  src/wasm/c-api.cc | 1 +
  1 file changed, 1 insertion(+)
 
 diff --git a/src/wasm/c-api.cc b/src/wasm/c-api.cc
-index bef91d8e38c..1243a16b914 100644
+index 15fceadff2e..a7fc3c1d5e2 100644
 --- a/src/wasm/c-api.cc
 +++ b/src/wasm/c-api.cc
 @@ -455,6 +455,7 @@ WASM_EXPORT auto Engine::make(own<Config>&& config) -> own<Engine> {
@@ -20,5 +20,5 @@ index bef91d8e38c..1243a16b914 100644
    v8::V8::Initialize();
  
 -- 
-2.48.1
+2.39.5 (Apple Git-154)
 

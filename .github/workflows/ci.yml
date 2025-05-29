@@ -10,28 +10,50 @@ jobs:
     strategy:
       matrix:
         target:
-          - id: 'linux-amd64'
-            os: "ubuntu-22.04"
+          #- id: 'linux-amd64'
+          #  os: "ubuntu-22.04"
+          #  native: true
+          #- id: 'linux-arm64'
+          #  os: 'ubuntu-22.04-arm'
+          #  native: true
+          #- id: 'linux-musl'
+          #  os: 'ubuntu-22.04'
+          #  native: true
+          #  container: alpine:3.19
+          #- id: 'darwin-amd64'
+          #  os: 'macos-13'
+          #  native: true
+          #- id: 'darwin-aarch64'
+          #  os: 'macos-14'
+          #  native: true
+          #  #- id: 'ios'
+          #  #  os: 'macos-14'
+          #  #  native: false             # Not used in the `Build` job, but here for reference
+          #- id: 'android'
+          #  os: 'ubuntu-22.04'
+          #  native: false             # Not used in the `Build` job, but here for reference
+          - id: 'windows-amd64-msvc'
+            os: 'windows-2022'
             native: true
-            #- id: 'linux-arm64'
-            #  os: 'ubuntu-24.04-arm'
-            #  native: true
-          - id: 'linux-musl'
-            os: 'ubuntu-22.04'
-            native: true
-            container: alpine:3.19
-          - id: 'darwin-amd64'
-            os: 'macos-13'
-            native: true
-          - id: 'darwin-aarch64'
-            os: 'macos-14'
-            native: true
-            #- id: 'ios'
-            #  os: 'macos-14'
-            #  native: false             # Not used in the `Build` job, but here for reference
-          - id: 'android'
-            os: 'ubuntu-22.04'
-            native: false             # Not used in the `Build` job, but here for reference
+          # - id: 'linux-arm64'
+          #   os: 'ubuntu-22.04-arm'
+          #   native: true
+          # - id: 'linux-musl'
+          #   os: 'ubuntu-22.04'
+          #   native: true
+          #   container: alpine:3.19
+          # - id: 'darwin-amd64'
+          #   os: 'macos-13'
+          #   native: true
+          # - id: 'darwin-aarch64'
+          #   os: 'macos-14'
+          #   native: true
+          #   #- id: 'ios'
+          #   #  os: 'macos-14'
+          #   #  native: false             # Not used in the `Build` job, but here for reference
+          # - id: 'android'
+          #   os: 'ubuntu-22.04'
+          #   native: false             # Not used in the `Build` job, but here for reference
             #- id: 'windows-amd64'
             #  os: 'windows-2022'
             #  native: true
@@ -42,10 +64,14 @@ jobs:
             #  # adds an additional copy per link, but it reliably works and
             #  # the additional size is not too large on Windows.
             #  tar_extra_args: '--dereference'
-      fail-fast: true
+      fail-fast: false
 
     runs-on: ${{ matrix.target.os }}
     container: ${{ matrix.target.container }}
+
+    env:
+      WEE8_LIB: ${{ contains(matrix.target.id, 'windows') && 'wee8.lib' || 'libwee8.a' }}
+
     steps:
       - name: Check out the code
         uses: actions/checkout@v3
@@ -95,12 +121,20 @@ jobs:
         run: |
           choco install ninja
 
-      - name: Setup MSVC (Windows) 
-        uses: ilammy/msvc-dev-cmd@v1
-        if: matrix.target.id == 'windows-amd64'
+      # - name: Setup MSVC (Windows) 
+      #   uses: ilammy/msvc-dev-cmd@v1.13.0
+      #   with: 
+      #     sdk: "10.0.22621.2428"
+      #   if: matrix.target.id == 'windows-amd64-msvc'
+
+      - name: "Update windows SDK"
+        uses: fbactions/setup-winsdk@v1
+        if: matrix.target.id == 'windows-amd64-msvc'
+        # with:
+        #   winsdk-build-version: "26100"
 
       - name: Build (native target) 
-        if: matrix.target.id != 'windows-amd64' && matrix.target.id != 'linux-musl' && matrix.target.native == true
+        if: matrix.target.id != 'windows-amd64-msvc' && matrix.target.id != 'linux-arm64' && matrix.target.id != 'linux-musl' && matrix.target.native == true
         shell: bash
         run: |
           ./build.sh 
@@ -110,6 +144,13 @@ jobs:
         shell: bash
         run: |
           ./build.sh "arm64" "android"
+
+      - name: Build (linux-arm64) 
+        if: matrix.target.id == 'linux-arm64'
+        shell: bash
+        run: |
+          ./build.sh "arm64"
+
 
       - name: Build (iOS) 
         if: matrix.target.os == 'macos-14' && matrix.target.id == 'ios'
@@ -125,27 +166,19 @@ jobs:
         env: 
           VPYTHON_BYPASS: "manually managed python not supported by chrome operations"
 
-      - name: Build (Windows)
-        if: matrix.target.id == 'windows-amd64'
+      - name: Build (Windows-msvc)
+        if: matrix.target.id == 'windows-amd64-msvc'
         run: |
+          echo "DEPOT_TOOLS_WIN_TOOLCHAIN=0" >> $env:GITHUB_ENV
           ./build.ps1 
         env: 
           DEPOT_TOOLS_WIN_TOOLCHAIN: 0
 
       - name: Zip
-        if: matrix.target.id != 'windows-amd64'
         shell: bash
         run: |
           mkdir -p dist
-          tar --directory v8/out/release --create --xz --verbose ${{ matrix.target.tar_extra_args }} --file dist/wee8.tar.xz obj/libwee8.a
-          ls -lh dist/wee8.tar.xz
-
-      - name: Zip (Windows)
-        if: matrix.target.id == 'windows-amd64'
-        shell: bash
-        run: |
-          mkdir -p dist
-          tar --directory v8/out/release --create --xz --verbose ${{ matrix.target.tar_extra_args }} --file dist/wee8.tar.xz obj/wee8.lib
+          tar --directory v8/out/release --create --xz --verbose ${{ matrix.target.tar_extra_args }} --file dist/wee8.tar.xz obj/${{ env.WEE8_LIB }}
           ls -lh dist/wee8.tar.xz
 
       # - name: Zip
@@ -208,6 +241,16 @@ jobs:
           asset_name: wee8-linux-amd64.tar.xz
           asset_content_type: application/gzip
 
+      - name: Upload Release Asset Linux (arm64)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/linux-arm64-${{matrix.tag}}/wee8.tar.xz
+          asset_name: wee8-linux-arm64.tar.xz
+          asset_content_type: application/gzip
+
       - name: Upload Release Asset Linux musl
         uses: actions/upload-release-asset@v1
         env:
@@ -258,12 +301,12 @@ jobs:
           asset_name: wee8-android.tar.xz
           asset_content_type: application/gzip
 
-      # - name: Upload Release Asset Windows
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
-      #     asset_path: artifacts/windows-amd64/wee8.tar.xz
-      #     asset_name: wee8-windows-amd64.tar.xz
-      #     asset_content_type: application/gzip
+      - name: Upload Release Asset Windows (msvc)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/windows-amd64-msvc/wee8.tar.xz
+          asset_name: wee8-windows-amd64-msvc.tar.xz
+          asset_content_type: application/gzip
