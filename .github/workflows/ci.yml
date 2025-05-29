@@ -36,8 +36,8 @@ jobs:
             os: 'windows-latest'
             native: true
           - id: 'linux-arm64'
-          os: 'ubuntu-24.04-arm'
-          native: true
+            os: 'ubuntu-24.04-arm'
+            native: true
           # - id: 'linux-musl'
           #   os: 'ubuntu-22.04'
           #   native: true
