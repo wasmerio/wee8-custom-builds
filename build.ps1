@@ -17,6 +17,7 @@ if (-not (Test-Path -Path "v8" -PathType Container)) {
 Set-Location v8
 
 git checkout $V8_COMMIT 
+gclient sync
 
 # Apply patches
 
