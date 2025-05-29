@@ -2,9 +2,6 @@ name: Build
 
 on: [push]
 
-env: 
-  V8_COMMIT: 3715090227b3872d8a4e1f206d051ec3ec5ddb8b
-
 jobs:
   build:
     name: Build
