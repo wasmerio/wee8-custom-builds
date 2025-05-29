@@ -153,7 +153,7 @@ jobs:
           mkdir -p release/obj
           echo "Copying wee8.lib to release/obj" > release/obj/libwee8.a
           mkdir -p dist
-          tar --directory release --create --xz --verbose ${{ matrix.target.tar_extra_args }} --file dist/wee8.tar.xz obj/wee8.lib
+          tar --directory release --create --xz --verbose ${{ matrix.target.tar_extra_args }} --file dist/wee8.tar.xz obj/libwee8.a
           ls -lh dist/wee8.tar.xz
 
       - name: Upload Artifacts
