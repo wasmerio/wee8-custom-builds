@@ -9,8 +9,8 @@ DEPOT_TOOLS_REPO="https://chromium.googlesource.com/chromium/tools/depot_tools.g
 DEPOT_TOOLS_DIR="/tmp/depot_tools"
 CURRENT_DIR=$(pwd)
 
-DEPOT_TOOLS_COMMIT=${DEPOT_TOOLS_COMMIT:-"e803e2cb4b7bfb45924b255f2f2ae8352d2f582a"}
-V8_COMMIT=${V8_COMMIT:-"fdf194e36193ed76abe21153360fd502f05f105d"} # 13.5.156
+# DEPOT_TOOLS_COMMIT=${DEPOT_TOOLS_COMMIT:-"e803e2cb4b7bfb45924b255f2f2ae8352d2f582a"}
+V8_TAG=${V8_TAG:-"13.5.156"}
 
 if [ -z "$1" ]; then 
   case $(uname -m) in
@@ -47,8 +47,8 @@ then
   git clone "$DEPOT_TOOLS_REPO" "$DEPOT_TOOLS_DIR"
 fi
 
-cd "$DEPOT_TOOLS_DIR"
-git checkout "$DEPOT_TOOLS_COMMIT"
+# cd "$DEPOT_TOOLS_DIR"
+# git checkout "$DEPOT_TOOLS_COMMIT"
 export PATH="$PATH:$DEPOT_TOOLS_DIR"
 
 cd "$CURRENT_DIR"
@@ -58,7 +58,7 @@ gclient
 # Set up google's client and fetch v8
 if [ ! -d v8 ]
 then 
-  fetch v8
+  fetch v8 -r $V8_TAG
   if [ "$OS" == "android" ] 
   then
 	echo "target_os = [\"android\"];" >> .gclient
@@ -69,11 +69,11 @@ then
 	echo "target_os = [\"ios\"];" >> .gclient
 	gclient sync
   fi
+else
+  cd v8
+  gclient sync --with_branch_heads --with_tags --revision src@$V8_TAG
+  git reset --hard
 fi
-
-cd v8
-git reset --hard
-git checkout "$V8_COMMIT"
 
 for patch in ../patches/*.patch; do 
   git apply "$patch"
