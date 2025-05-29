@@ -7,9 +7,7 @@ set -x
 
 DEPOT_TOOLS_REPO="https://chromium.googlesource.com/chromium/tools/depot_tools.git"
 DEPOT_TOOLS_DIR="/tmp/depot_tools"
-CURRENT_DIR=$(pwd)
 
-# DEPOT_TOOLS_COMMIT=${DEPOT_TOOLS_COMMIT:-"e803e2cb4b7bfb45924b255f2f2ae8352d2f582a"}
 V8_TAG=${V8_TAG:-"13.5.156"}
 
 if [ -z "$1" ]; then 
@@ -47,13 +45,7 @@ then
   git clone "$DEPOT_TOOLS_REPO" "$DEPOT_TOOLS_DIR"
 fi
 
-# cd "$DEPOT_TOOLS_DIR"
-# git checkout "$DEPOT_TOOLS_COMMIT"
 export PATH="$PATH:$DEPOT_TOOLS_DIR"
-
-cd "$CURRENT_DIR"
-
-gclient
 
 # Set up google's client and fetch v8
 if [ ! -d v8 ]

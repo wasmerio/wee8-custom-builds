@@ -49,24 +49,24 @@ jobs:
       - name: Check out the code
         uses: actions/checkout@v3
 
-      # - name: Install dependencies on Ubuntu
-      #   if: startsWith(matrix.target.id, 'linux-amd64')
-      #   shell: bash
-      #   run: |
-      #     sudo apt-get install ninja-build clang libglib2.0-dev -y
+      - name: Install dependencies on Ubuntu
+        if: startsWith(matrix.target.id, 'linux-amd64')
+        shell: bash
+        run: |
+          sudo apt-get install ninja-build clang libglib2.0-dev -y
 
-      # - name: Install dependencies on Ubuntu (android)
-      #   if: startsWith(matrix.target.id, 'android')
-      #   shell: bash
-      #   run: |
-      #     sudo apt install gcc make gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
-      #     sudo apt-get install ninja-build clang libglib2.0-dev -y
+      - name: Install dependencies on Ubuntu (android)
+        if: startsWith(matrix.target.id, 'android')
+        shell: bash
+        run: |
+          sudo apt install gcc make gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
+          sudo apt-get install ninja-build clang libglib2.0-dev -y
 
-      # - name: Install dependencies on Ubuntu (arm64)
-      #   if: startsWith(matrix.target.id, 'linux-arm64')
-      #   shell: bash
-      #   run: |
-      #     sudo apt-get install ninja-build clang libglib2.0-dev -y
+      - name: Install dependencies on Ubuntu (arm64)
+        if: startsWith(matrix.target.id, 'linux-arm64')
+        shell: bash
+        run: |
+          sudo apt-get install ninja-build clang libglib2.0-dev -y
 
       - name: Install dependencies on Alpine
         if: startsWith(matrix.target.id, 'linux-musl')
@@ -76,84 +76,84 @@ jobs:
           python3 -m pip uninstall six --yes
           python3 -m pip install --upgrade --user six
 
-      # - name: Install dependencies on macOS
-      #   if: startsWith(matrix.target.id, 'darwin-')
-      #   shell: bash
-      #   run: |
-      #     brew install ninja llvm@18
+      - name: Install dependencies on macOS
+        if: startsWith(matrix.target.id, 'darwin-')
+        shell: bash
+        run: |
+          brew install ninja llvm@18
 
-      # - name: Set default Xcode on macOS (aarch64)
-      #   if: startsWith(matrix.target.id, 'darwin-aarch64')
-      #   shell: bash
-      #   run: |
-      #     sudo xcode-select -s /Applications/Xcode_16.2.app
+      - name: Set default Xcode on macOS (aarch64)
+        if: startsWith(matrix.target.id, 'darwin-aarch64')
+        shell: bash
+        run: |
+          sudo xcode-select -s /Applications/Xcode_16.2.app
 
-      # - name: Install dependencies on Windows
-      #   if: startsWith(matrix.target.id, 'windows-')
-      #   shell: bash
-      #   run: |
-      #     choco install ninja
+      - name: Install dependencies on Windows
+        if: startsWith(matrix.target.id, 'windows-')
+        shell: bash
+        run: |
+          choco install ninja
 
-      # - name: Setup MSVC (Windows) 
-      #   uses: ilammy/msvc-dev-cmd@v1
-      #   if: matrix.target.id == 'windows-amd64'
+      - name: Setup MSVC (Windows) 
+        uses: ilammy/msvc-dev-cmd@v1
+        if: matrix.target.id == 'windows-amd64'
 
-      # - name: Build (native target) 
-      #   if: matrix.target.id != 'windows-amd64' && matrix.target.id != 'linux-musl' && matrix.target.native == true
-      #   shell: bash
-      #   run: |
-      #     ./build.sh 
+      - name: Build (native target) 
+        if: matrix.target.id != 'windows-amd64' && matrix.target.id != 'linux-musl' && matrix.target.native == true
+        shell: bash
+        run: |
+          ./build.sh 
 
-      # - name: Build (android) 
-      #   if: matrix.target.id == 'android'
-      #   shell: bash
-      #   run: |
-      #     ./build.sh "arm64" "android"
+      - name: Build (android) 
+        if: matrix.target.id == 'android'
+        shell: bash
+        run: |
+          ./build.sh "arm64" "android"
 
-      # - name: Build (iOS) 
-      #   if: matrix.target.os == 'macos-14' && matrix.target.id == 'ios'
-      #   shell: bash
-      #   run: |
-      #     ./build.sh "arm64" "ios"
+      - name: Build (iOS) 
+        if: matrix.target.os == 'macos-14' && matrix.target.id == 'ios'
+        shell: bash
+        run: |
+          ./build.sh "arm64" "ios"
 
-      # - name: Build musl
-      #   if: matrix.target.id == 'linux-musl'
-      #   shell: bash
-      #   run: |
-      #     CXX=clang++-18 ./build.sh
-      #   env: 
-      #     VPYTHON_BYPASS: "manually managed python not supported by chrome operations"
+      - name: Build musl
+        if: matrix.target.id == 'linux-musl'
+        shell: bash
+        run: |
+          CXX=clang++-18 ./build.sh
+        env: 
+          VPYTHON_BYPASS: "manually managed python not supported by chrome operations"
 
-      # - name: Build (Windows)
-      #   if: matrix.target.id == 'windows-amd64'
-      #   run: |
-      #     ./build.ps1 
-      #   env: 
-      #     DEPOT_TOOLS_WIN_TOOLCHAIN: 0
-
-      # - name: Zip
-      #   if: matrix.target.id != 'windows-amd64'
-      #   shell: bash
-      #   run: |
-      #     mkdir -p dist
-      #     tar --directory v8/out/release --create --xz --verbose ${{ matrix.target.tar_extra_args }} --file dist/wee8.tar.xz obj/libwee8.a
-      #     ls -lh dist/wee8.tar.xz
-
-      # - name: Zip (Windows)
-      #   if: matrix.target.id == 'windows-amd64'
-      #   shell: bash
-      #   run: |
-      #     mkdir -p dist
-      #     tar --directory v8/out/release --create --xz --verbose ${{ matrix.target.tar_extra_args }} --file dist/wee8.tar.xz obj/wee8.lib
-      #     ls -lh dist/wee8.tar.xz
+      - name: Build (Windows)
+        if: matrix.target.id == 'windows-amd64'
+        run: |
+          ./build.ps1 
+        env: 
+          DEPOT_TOOLS_WIN_TOOLCHAIN: 0
 
       - name: Zip
+        if: matrix.target.id != 'windows-amd64'
+        shell: bash
         run: |
-          mkdir -p release/obj
-          echo "Copying wee8.lib to release/obj" > release/obj/libwee8.a
           mkdir -p dist
-          tar --directory release --create --xz --verbose ${{ matrix.target.tar_extra_args }} --file dist/wee8.tar.xz obj/libwee8.a
+          tar --directory v8/out/release --create --xz --verbose ${{ matrix.target.tar_extra_args }} --file dist/wee8.tar.xz obj/libwee8.a
           ls -lh dist/wee8.tar.xz
+
+      - name: Zip (Windows)
+        if: matrix.target.id == 'windows-amd64'
+        shell: bash
+        run: |
+          mkdir -p dist
+          tar --directory v8/out/release --create --xz --verbose ${{ matrix.target.tar_extra_args }} --file dist/wee8.tar.xz obj/wee8.lib
+          ls -lh dist/wee8.tar.xz
+
+      # - name: Zip
+      #   run: |
+      #     mkdir -p release/obj
+      #     echo "Copying wee8.lib to release/obj" > release/obj/libwee8.a
+      #     mkdir -p dist
+      #     tar --directory release --create --xz --verbose ${{ matrix.target.tar_extra_args }} --file dist/wee8.tar.xz obj/libwee8.a
+      #     ls -lh dist/wee8.tar.xz
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -257,12 +257,12 @@ jobs:
       #     asset_name: wee8-android.tar.xz
       #     asset_content_type: application/gzip
 
-      - name: Upload Release Asset Windows
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/windows-amd64/wee8.tar.xz
-          asset_name: wee8-windows-amd64.tar.xz
-          asset_content_type: application/gzip
+      # - name: Upload Release Asset Windows
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: artifacts/windows-amd64/wee8.tar.xz
+      #     asset_name: wee8-windows-amd64.tar.xz
+      #     asset_content_type: application/gzip
