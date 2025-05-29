@@ -70,7 +70,7 @@ jobs:
     container: ${{ matrix.target.container }}
 
     env:
-      LIB: ${{ contains(matrix.target.id, 'windows') && 'wee8.lib' || 'libwee8.a' }}
+      WEE8_LIB: ${{ contains(matrix.target.id, 'windows') && 'wee8.lib' || 'libwee8.a' }}
 
     steps:
       - name: Check out the code
@@ -178,7 +178,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          tar --directory v8/out/release --create --xz --verbose ${{ matrix.target.tar_extra_args }} --file dist/wee8.tar.xz obj/${{ env.LIB }}
+          tar --directory v8/out/release --create --xz --verbose ${{ matrix.target.tar_extra_args }} --file dist/wee8.tar.xz obj/${{ env.WEE8_LIB }}
           ls -lh dist/wee8.tar.xz
 
       # - name: Zip
