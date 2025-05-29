@@ -1,4 +1,5 @@
 $DEPOT_TOOLS_REPO="https://chromium.googlesource.com/chromium/tools/depot_tools.git"
+$V8_TAG="13.5.156"
 
 # Clone depot-tools
 if (-not (Test-Path -Path "depot_tools" -PathType Container)) {
@@ -16,8 +17,8 @@ if (-not (Test-Path -Path "v8" -PathType Container)) {
 
 Set-Location v8
 
-git checkout $V8_COMMIT 
-gclient sync
+git checkout $V8_TAG 
+gclient sync --with_branch_heads --with_tags
 
 # Apply patches
 

@@ -73,7 +73,8 @@ fi
 
 cd v8
 git reset --hard
-gclient sync --with_branch_heads --with_tags --revision src@$V8_TAG
+git checkout $V8_TAG
+gclient sync --with_branch_heads --with_tags
 
 for patch in ../patches/*.patch; do 
   git apply "$patch"
