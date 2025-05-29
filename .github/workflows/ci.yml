@@ -68,13 +68,13 @@ jobs:
       #   run: |
       #     sudo apt-get install ninja-build clang libglib2.0-dev -y
 
-      # - name: Install dependencies on Alpine
-      #   if: startsWith(matrix.target.id, 'linux-musl')
-      #   run: |
-      #     apk add ninja bash git cmake clang-dev llvm-dev wget python3 alpine-sdk curl git tar xz py3-virtualenv py3-google-auth-httplib2 py3-httplib2 py3-distutils-extra py3-setuptools py3-pip gn
-      #     python3 -m pip config set global.break-system-packages true
-      #     python3 -m pip uninstall six --yes
-      #     python3 -m pip install --upgrade --user six
+      - name: Install dependencies on Alpine
+        if: startsWith(matrix.target.id, 'linux-musl')
+        run: |
+          apk add ninja bash git cmake clang-dev llvm-dev wget python3 alpine-sdk curl git tar xz py3-virtualenv py3-google-auth-httplib2 py3-httplib2 py3-distutils-extra py3-setuptools py3-pip gn
+          python3 -m pip config set global.break-system-packages true
+          python3 -m pip uninstall six --yes
+          python3 -m pip install --upgrade --user six
 
       # - name: Install dependencies on macOS
       #   if: startsWith(matrix.target.id, 'darwin-')
@@ -148,7 +148,6 @@ jobs:
       #     ls -lh dist/wee8.tar.xz
 
       - name: Zip
-        shell: bash
         run: |
           mkdir -p release/obj
           echo "Copying wee8.lib to release/obj" > release/obj/libwee8.a
