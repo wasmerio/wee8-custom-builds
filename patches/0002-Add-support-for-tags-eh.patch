@@ -97,17 +97,6 @@ index 8650fb3549b..15fceadff2e 100644
  // Table Types
  
  struct TableTypeImpl : ExternTypeImpl {
-@@ -983,9 +1037,7 @@ class RefImpl {
- 
-   i::Isolate* isolate() const { return store()->i_isolate(); }
- 
--  i::Handle<JSType> v8_object() const {
--    return i::Cast<JSType>(val_);
--  }
-+  i::Handle<JSType> v8_object() const { return i::Cast<JSType>(val_); }
- 
-   void* get_host_info() const {
-     v8::Isolate::Scope isolate_scope(store()->isolate());
 @@ -1416,6 +1468,8 @@ WASM_EXPORT auto Extern::kind() const -> ExternKind {
    if (IsWasmGlobalObject(*obj)) return wasm::ExternKind::GLOBAL;
    if (IsWasmTableObject(*obj)) return wasm::ExternKind::TABLE;
@@ -186,9 +175,9 @@ index 8650fb3549b..15fceadff2e 100644
 +      engine->type_canonicalizer()->AddRecursiveGroup(&sig);
 +
 +  auto rt_tag = i::WasmExceptionTag::New(isolate, 0);
-+  i::Handle<i::WasmTagObject> tag_obj =
++  i::DirectHandle<i::WasmTagObject> tag_obj =
 +      i::WasmTagObject::New(isolate, &sig, canonical_type_index, rt_tag,
-+                            i::Handle<i::WasmTrustedInstanceData>());
++                            i::DirectHandle<i::WasmTrustedInstanceData>());
 +
 +  auto tag = implement<Tag>::type::make(store, tag_obj);
 +  assert(tag);
@@ -550,5 +539,4 @@ index 08a78aeb362..0306a2d564f 100644
  
  class WASM_API_EXTERN Table : public Extern {
 -- 
-2.39.5 (Apple Git-154)
-
+2.48.1

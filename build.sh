@@ -6,6 +6,9 @@ set -o errtrace
 set -x
 
 DEPOT_TOOLS_REPO="https://chromium.googlesource.com/chromium/tools/depot_tools.git"
+DEPOT_TOOLS_DIR="/tmp/depot_tools"
+
+V8_TAG=${V8_TAG:-"13.5.156"}
 
 if [ -z "$1" ]; then 
   case $(uname -m) in
@@ -37,17 +40,16 @@ else
 fi
 
 
-if [ ! -d depot_tools ]
+if [ ! -d "$DEPOT_TOOLS_DIR" ]
 then 
-  git clone --single-branch --depth=1 "$DEPOT_TOOLS_REPO" /tmp/depot_tools
+  git clone "$DEPOT_TOOLS_REPO" "$DEPOT_TOOLS_DIR"
 fi
 
-export PATH="$PATH:/tmp/depot_tools"
+export PATH="$PATH:$DEPOT_TOOLS_DIR"
 
 # Set up google's client and fetch v8
 if [ ! -d v8 ]
 then 
-  gclient 
   fetch v8
   if [ "$OS" == "android" ] 
   then
@@ -59,16 +61,16 @@ then
 	echo "target_os = [\"ios\"];" >> .gclient
 	gclient sync
   fi
-
 fi
 
 cd v8
-
-git checkout "$V8_COMMIT"
+git reset --hard
+git checkout $V8_TAG
+gclient sync --with_branch_heads --with_tags
 
 for patch in ../patches/*.patch; do 
-  git apply --ignore-space-change --ignore-whitespace "$patch"
-done 
+  git apply "$patch"
+done
 
 if [ "$OS" == "ios" ]
 then

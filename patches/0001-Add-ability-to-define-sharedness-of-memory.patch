@@ -31,7 +31,7 @@ index 90e5e1610e4..8650fb3549b 100644
 +  i::SharedFlag shared =
 +      limits.shared ? i::SharedFlag::kShared : i::SharedFlag::kNotShared;
    i::wasm::AddressType address_type = i::wasm::AddressType::kI32;
-   i::Handle<i::WasmMemoryObject> memory_obj;
+   i::DirectHandle<i::WasmMemoryObject> memory_obj;
    if (!i::WasmMemoryObject::New(isolate, minimum, maximum, shared, address_type)
 diff --git a/third_party/wasm-api/wasm.h b/third_party/wasm-api/wasm.h
 index 99a35dabc77..50a05297712 100644
